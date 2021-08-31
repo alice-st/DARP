@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-
 if [ "$#" -ne 1 ]; then
   echo "Give only one argument, the name of the virtual environment to create"
   exit
