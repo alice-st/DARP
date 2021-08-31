@@ -8,8 +8,19 @@ DARP algorithm divides the terrain into a number of equal areas each correspondi
 
 ## Requirements
 
-Project is created with:
+This project was created using:
 
-*Python version: 3.6.14
-*OpenCV version: 4.5.2.54
-*Pygame version: 2.0.1
+* Python version >= 3.6.14
+* OpenCV version >= 4.5.2.54
+* Pygame version >= 2.0.1
+* Scipy version >= 1.7.1
+
+## Installation
+
+```
+git clone https://github.com/alice-st/DARP-Python.git
+cd DARP-Python
+./Dependencies.sh DARP
+source DARP/bin/activate
+python3 darpinPoly.py
+```
