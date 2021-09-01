@@ -34,7 +34,7 @@ python3 darpinPoly.py
 ## Usage
 * To modify the Grid Dimensions, use:
 ```
-python3 darpinPoly.py -Grid x y
+python3 darpinPoly.py -grid x y
 
 ```
 where x, y are the desired rows and columns of the Grid respectively (default: 10, 10).
