@@ -15,7 +15,7 @@ This project was created using:
 * Pygame version >= 2.0.1
 * Scipy version >= 1.7.1
 
-## Installation
+## Installation and Running
 
 ```
 git clone https://github.com/alice-st/DARP-Python.git
@@ -24,3 +24,6 @@ cd DARP-Python
 source DARP/bin/activate
 python3 darpinPoly.py
 ```
+
+## Modifying the parameters
+

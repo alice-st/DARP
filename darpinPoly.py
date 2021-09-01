@@ -4,6 +4,7 @@ from kruskal import Kruskal
 from CalculateTrajectories import CalculateTrajectories
 from Visualization import visualize_paths
 import sys
+import random
 
 
 class DARPinPoly(DARP):
@@ -15,7 +16,6 @@ class DARPinPoly(DARP):
             sys.exit(0)
 
         for mode in range(4):
-            print("mode", mode)
             MSTs = self.calculateMSTs(self.BinaryRobotRegions, self.droneNo, self.rows, self.cols, mode)
             AllRealPaths = []
             for r in range(self.droneNo):
@@ -102,14 +102,35 @@ class DARPinPoly(DARP):
 
 
 if __name__ == '__main__':
-    nx, ny = 10, 10
+
+    rows, cols = 10, 10
+    obstacles_positions = [[5, 5], [5, 6], [6, 5]]
+
+    portions = [0.2, 0.8]
+    if sum(portions) != 1:
+        print("Sum of portions should be equal to 1.")
+        sys.exit(1)
+
+    initial_positions = [[0, 8], [4, 5]]
+    for position in initial_positions:
+        if (position[0] < 0 or position[0] >= rows) or (position[1] < 0 or position[1] >= cols):
+            print("Initial positions should be inside the Grid.")
+            sys.exit(2)
+        for obstacle in obstacles_positions:
+            if position[0] == obstacle[0] and position[1] == obstacle[1]:
+                print("Initial positions should not be on obstacles")
+                sys.exit(3)
+
+    for obstacle in obstacles_positions:
+        if (obstacle[0] < 0 or obstacle[0] >= rows) or (obstacle[1] < 0 or obstacle[1] >= cols):
+            print("Obstacles should be inside the Grid.")
+            sys.exit(3)
+
     MaxIter = 80000
     CCvariation = 0.01
     randomLevel = 0.0001
     dcells = 2
     importance = False
     notEqualPortions = True
-    initial_positions = [[0, 0], [4, 5], [7, 4], [8, 2]]
-    portions = [0.1, 0.3, 0.4, 0.2]
-    obstacles_positions = [[5, 5], [5, 6], [6, 5]]
-    poly = DARPinPoly(nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions)
+
+    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions)
