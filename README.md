@@ -17,13 +17,52 @@ This project was created using:
 
 ## Installation and Running
 
+* To install the application, use:
 ```
 git clone https://github.com/alice-st/DARP-Python.git
 cd DARP-Python
 ./Dependencies.sh DARP
 source DARP/bin/activate
+```
+
+* To run the application, use:
+
+```
 python3 darpinPoly.py
 ```
 
-## Modifying the parameters
+## Usage
+* To modify the Grid Dimensions, use:
+```
+python3 darpinPoly.py -Grid x y
+
+```
+where x, y are the desired rows and columns of the Grid respectively (default: 10, 10).
+
+* To modify the number of Robots and their Initial Positions, use:
+
+```
+python3 darpinPoly.py -in_pos a b c
+
+```
+where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,column=0 --> cell=1, row=0,column=1 --> cell=2 etc.)
+
+* To assign different portions to each Robot (not Equal), use:
+
+```
+python3 darpinPoly.py -ne -portions d e f
+
+```
+
+where d e f are the portions assigned to Robots a, b and c respectively. Their sum should be equal to 1. (default: 0.2, 0.3, 0.5)
+
+* To use different positions for the obstacles in the Grid, use:
+
+```
+python3 darpinPoly.py -obs_pos o1 o2 o3
+```
+
+where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=1, row=0,column=1 --> cell=2 etc.)
+
+
 
