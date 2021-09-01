@@ -61,7 +61,6 @@ class DARP():
 
         self.success = self.update()
 
-
     def defineRobotsObstacles(self):
         for i in range(self.rows):
             for j in range(self.cols):
@@ -117,7 +116,7 @@ class DARP():
                         divFairError[r] = upperThres - plainErrors[r]
 
                 if self.IsThisAGoalState(self.termThr, ConnectedRobotRegions):
-                    print("Final Assignment Matrix:")
+                    print("\nFinal Assignment Matrix:")
                     print(self.A)
                     break
 

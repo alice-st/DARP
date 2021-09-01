@@ -5,6 +5,7 @@ from CalculateTrajectories import CalculateTrajectories
 from Visualization import visualize_paths
 import sys
 import random
+import argparse
 
 
 class DARPinPoly(DARP):
@@ -103,15 +104,72 @@ class DARPinPoly(DARP):
 
 if __name__ == '__main__':
 
-    rows, cols = 10, 10
-    obstacles_positions = [[5, 5], [5, 6], [6, 5]]
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '-Grid',
+        default=(10, 10),
+        type=int,
+        nargs=2,
+        help='Dimensions of the Grid (default: (10, 10))')
+    argparser.add_argument(
+        '-ObsPos',
+        default=[5, 6, 7],
+        nargs='*',
+        type=int,
+        help='Dimensions of the Grid (default: (10, 10))')
+    argparser.add_argument(
+        '-InPos',
+        default=[1, 3, 9],
+        nargs='*',
+        type=int,
+        help='Initial Positions of the robots (default: (1, 3, 9))')
+    argparser.add_argument(
+        '-NEP',
+        action='store_true',
+        help='Not Equal Portions shared between the Robots in the Grid (default: False)')
+    argparser.add_argument(
+        '-Portions',
+        default=[0.6, 0.7, 0.1],
+        nargs='*',
+        type=float,
+        help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
+    args = argparser.parse_args()
 
-    portions = [0.2, 0.8]
-    if sum(portions) != 1:
+    rows, cols = args.Grid
+
+    cell = 0
+    obstacles_positions = []
+    initial_positions = []
+    for row in range(rows):
+        for col in range(cols):
+            cell += 1
+            for obstacle in args.ObsPos:
+                if cell == obstacle:
+                    obstacles_positions.append((row, col))
+            for position in args.InPos:
+                if cell == position:
+                    initial_positions.append((row, col))
+
+    portions = []
+    print(bool(args.NEP))
+    if args.NEP:
+        input("a")
+        for portion in args.Portions:
+            portions.append(portion)
+    else:
+        for drone in range(len(initial_positions)):
+            portions.append(1/len(initial_positions))
+
+    if len(initial_positions) != len(args.Portions):
+        print("Portions should be defined for each drone")
+        sys.exit(4)
+
+    s = sum(portions)
+    if abs(s-1) >= 0.0001:
         print("Sum of portions should be equal to 1.")
         sys.exit(1)
 
-    initial_positions = [[0, 8], [4, 5]]
     for position in initial_positions:
         if (position[0] < 0 or position[0] >= rows) or (position[1] < 0 or position[1] >= cols):
             print("Initial positions should be inside the Grid.")
@@ -131,6 +189,13 @@ if __name__ == '__main__':
     randomLevel = 0.0001
     dcells = 2
     importance = False
-    notEqualPortions = True
 
-    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions)
+    print("")
+    print("\nInitial Conditions Defined:")
+    print("Grid Dimensions:", rows, cols)
+    print("Robot Number:", len(initial_positions))
+    print("Initial Robots' positions", initial_positions)
+    print("Portions for each Robot:", portions, "\n")
+    print("")
+
+    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.NEP, initial_positions, portions, obstacles_positions)
