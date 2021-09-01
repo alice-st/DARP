@@ -107,36 +107,36 @@ if __name__ == '__main__':
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
-        '-Grid',
+        '-grid',
         default=(10, 10),
         type=int,
         nargs=2,
         help='Dimensions of the Grid (default: (10, 10))')
     argparser.add_argument(
-        '-ObsPos',
+        '-obs_pos',
         default=[5, 6, 7],
         nargs='*',
         type=int,
         help='Dimensions of the Grid (default: (10, 10))')
     argparser.add_argument(
-        '-InPos',
+        '-in_pos',
         default=[1, 3, 9],
         nargs='*',
         type=int,
         help='Initial Positions of the robots (default: (1, 3, 9))')
     argparser.add_argument(
-        '-NEP',
+        '-nep',
         action='store_true',
         help='Not Equal Portions shared between the Robots in the Grid (default: False)')
     argparser.add_argument(
-        '-Portions',
-        default=[0.6, 0.7, 0.1],
+        '-portions',
+        default=[0.2, 0.3, 0.5],
         nargs='*',
         type=float,
         help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
     args = argparser.parse_args()
 
-    rows, cols = args.Grid
+    rows, cols = args.grid
 
     cell = 0
     obstacles_positions = []
@@ -144,24 +144,23 @@ if __name__ == '__main__':
     for row in range(rows):
         for col in range(cols):
             cell += 1
-            for obstacle in args.ObsPos:
+            for obstacle in args.obs_pos:
                 if cell == obstacle:
                     obstacles_positions.append((row, col))
-            for position in args.InPos:
+            for position in args.in_pos:
                 if cell == position:
                     initial_positions.append((row, col))
 
     portions = []
-    print(bool(args.NEP))
-    if args.NEP:
-        input("a")
-        for portion in args.Portions:
+    print(bool(args.nep))
+    if args.nep:
+        for portion in args.portions:
             portions.append(portion)
     else:
         for drone in range(len(initial_positions)):
             portions.append(1/len(initial_positions))
-
-    if len(initial_positions) != len(args.Portions):
+    print(len(initial_positions))
+    if len(initial_positions) != len(args.portions):
         print("Portions should be defined for each drone")
         sys.exit(4)
 
@@ -190,12 +189,10 @@ if __name__ == '__main__':
     dcells = 2
     importance = False
 
-    print("")
     print("\nInitial Conditions Defined:")
     print("Grid Dimensions:", rows, cols)
     print("Robot Number:", len(initial_positions))
     print("Initial Robots' positions", initial_positions)
     print("Portions for each Robot:", portions, "\n")
-    print("")
 
-    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.NEP, initial_positions, portions, obstacles_positions)
+    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.nep, initial_positions, portions, obstacles_positions)

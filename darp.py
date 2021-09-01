@@ -14,7 +14,23 @@ class DARP():
     def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions):
         self.rows = nx
         self.cols = ny
-        self.GridEnv = np.full(shape=(nx, ny), fill_value=0)
+        empty_space = []
+        if nx > ny:
+            for j in range(ny, nx):
+                for i in range(nx):
+                    empty_space.append((i, j))
+            self.cols = self.rows
+        elif ny > nx:
+            for j in range(nx, ny):
+                for i in range(ny):
+                    empty_space.append((j, i))
+            self.rows = self.cols
+
+        self.GridEnv = np.full(shape=(self.rows, self.cols), fill_value=0)
+
+        for cell in empty_space:
+            self.GridEnv[cell[0], cell[1]] = 1
+
         if obstacles_positions != []:
             for obstacle in obstacles_positions:
                 self.GridEnv[obstacle[0], obstacle[1]] = 1
@@ -35,7 +51,6 @@ class DARP():
         self.dcells = dcells
         self.importance = importance
         self.notEqualPortions = notEqualPortions
-        self.DARPgrid = np.zeros((nx, ny))
         self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
         self.BinaryRobotRegions = np.zeros((self.droneNo, self.rows, self.cols), dtype=bool)
 
@@ -160,7 +175,6 @@ class DARP():
                 success = False
                 self.termThr += 1
 
-
         self.getBinaryRobotRegions()
         return success
 
@@ -178,8 +192,7 @@ class DARP():
         randomlevel = 0.0001
         for i in range(self.rows):
             for j in range(self.cols):
-                # RandomMa[i][j] = 2*randomlevel*random.uniform(0, 1) + (1 - randomlevel)
-                RandomMa[i][j] = 1
+                RandomMa[i][j] = 2*randomlevel*random.uniform(0, 1) + (1 - randomlevel)
 
         return RandomMa
 
@@ -194,7 +207,8 @@ class DARP():
 
     def IsThisAGoalState(self, thresh, connectedRobotRegions):
         for r in range(self.droneNo):
-            if np.absolute(self.DesireableAssign[r] - self.ArrayOfElements[r]) >= thresh or not connectedRobotRegions[r]:
+            #TODO if thresh == 0?
+            if np.absolute(self.DesireableAssign[r] - self.ArrayOfElements[r]) > thresh or not connectedRobotRegions[r]:
                 return False
         return True
 
