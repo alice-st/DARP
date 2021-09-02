@@ -10,7 +10,12 @@ DARP algorithm divides the terrain into a number of equal areas each correspondi
 
 In essence, the DARP algorithm follows a cyclic coordinate descent optimization scheme updating each robots’ territory separately but towards achieving the overall mCPP objectives.
 
-![](images/DARP.png)
+<p align="center">
+  <img width="550" height="300" src="images/DARP.png">
+</p>
+
+After the desired area division is achieved, we use Spanning Tree Coverage algorithm to produce the optimal path for each robot, in order to achieve full coverage of the area of interest.
+
 
 ## Requirements
 
