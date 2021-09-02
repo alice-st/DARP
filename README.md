@@ -82,5 +82,38 @@ python3 darpinPoly.py -obs_pos o1 o2 o3
 
 where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=1, row=0,column=1 --> cell=2 etc.)
 
+# Results
 
+Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and Equal portions of the Grid shared between the robots, we obtained the following results:
 
+## Assignment Matrix
+
+<p align="center">
+  <img width="550" height="550" src="images/DARP.gif">
+</p>
+
+## STC paths for each robot, ensuring complete area coverage
+  
+### Mode = 0 (connection on top between the side of the branches of the MST)
+
+<p align="center">
+  <img width="550" height="550" src="images/mode0.png">
+</p>
+
+### Mode = 1 (connection on bottom between the side of the branches of the MST)
+
+<p align="center">
+  <img width="550" height="550" src="images/mode1.png">
+</p>
+
+### Mode = 2 (connection on right between the side of the branches of the MST)
+
+<p align="center">
+  <img width="550" height="550" src="images/mode2.png">
+</p>
+
+### Mode = 3 (connection on left between the side of the branches of the MST)
+
+<p align="center">
+  <img width="550" height="550" src="images/mode3.png">
+</p>
