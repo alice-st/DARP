@@ -14,7 +14,14 @@ In essence, the DARP algorithm follows a cyclic coordinate descent optimization 
   <img width="550" height="300" src="images/DARP.png">
 </p>
 
+
 After the desired area division is achieved, we use Spanning Tree Coverage algorithm to produce the optimal path for each robot, in order to achieve full coverage of the area of interest.
+
+
+
+<p align="center">
+  <img width="650" height="400" src="images/STC.png">
+</p>
 
 
 ## Requirements
