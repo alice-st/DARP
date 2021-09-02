@@ -94,13 +94,13 @@ Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and 
 
 ## STC paths for each robot, ensuring complete area coverage
   
-### Mode = 0 (connection on top between the side of the branches of the MST)
+### Mode = 0 (connection on bottom between the side of the branches of the MST)
 
 <p align="center">
   <img width="550" height="550" src="images/mode0.png">
 </p>
 
-### Mode = 1 (connection on bottom between the side of the branches of the MST)
+### Mode = 1 (connection on top between the side of the branches of the MST)
 
 <p align="center">
   <img width="550" height="550" src="images/mode1.png">
@@ -141,3 +141,15 @@ ROS integration: [Wiki](http://wiki.ros.org/area_division)
 [4] Zheng, X., Koenig, S., Kempe, D. and Jain, S., 2010. Multirobot forest coverage for weighted and unweighted terrain. IEEE Transactions on Robotics
 
 [5] Kapoutsis, A.C., Chatzichristofis, S.A. and Kosmatopoulos, E.B., 2017. DARP: divide areas algorithm for optimal multi-robot coverage path planning. Journal of Intelligent & Robotic Systems
+
+# Cite as
+
+```
+@article{kapoutsisdarp,
+  title={DARP: Divide Areas Algorithm for Optimal Multi-Robot Coverage Path Planning},
+  author={Kapoutsis, Athanasios Ch and Chatzichristofis, Savvas A and Kosmatopoulos, Elias B},
+  journal={Journal of Intelligent \& Robotic Systems},
+  pages={1--18},
+  publisher={Springer}
+}
+```
