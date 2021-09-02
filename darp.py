@@ -168,7 +168,7 @@ class DARP():
 
                 iteration += 1
                 self.assignment_matrix_visualization.placeCells(self.A)
-                time.sleep(1)
+                time.sleep(0.5)
 
             if iteration >= self.MaxIter:
                 self.MaxIter = self.MaxIter/2

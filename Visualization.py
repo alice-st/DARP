@@ -2,6 +2,7 @@ import sys
 import pygame
 from pygame.locals import KEYDOWN, K_q
 import numpy as np
+import time
 
 # CONSTANTS:
 SCREENSIZE = WIDTH, HEIGHT = 800, 800
@@ -180,6 +181,7 @@ class darp_area_visualization(object):
         self.placeCells(self.Assignment_matrix)
         pygame.display.set_caption('Assignment Matrix')
         pygame.display.update()
+        time.sleep(5)
 
     def checkEvents(self):
         for event in pygame.event.get():
