@@ -6,6 +6,12 @@ This project deals with the path planning problem of a team of mobile robots, in
 
 DARP algorithm divides the terrain into a number of equal areas each corresponding to a specific robot, so as to guarantee complete coverage, non-backtracking solution, minimum coverage path, while at the same time does not need any preparatory stage.
 
+### But how does this algorithm work?
+
+In essence, the DARP algorithm follows a cyclic coordinate descent optimization scheme updating each robots’ territory separately but towards achieving the overall mCPP objectives.
+
+![](images/DARP.png)
+
 ## Requirements
 
 This project was created using:
