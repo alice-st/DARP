@@ -118,7 +118,7 @@ Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and 
   <img width="550" height="550" src="images/mode3.png">
 </p>
 
-# Material
+# Extra Material
 
 Paper: [Zenodo](https://zenodo.org/record/2591050#.YTCvBVtRVH6)
 
@@ -130,17 +130,6 @@ GUI demo: [YouTube](https://www.youtube.com/watch?v=LrGfvma41Ak)
 
 ROS integration: [Wiki](http://wiki.ros.org/area_division)
 
-# References
-
-[1] Rekleitis, I., New, A.P., Rankin, E.S. and Choset, H., 2008. Efficient boustrophedon multi-robot coverage: an algorithmic approach. Annals of Mathematics and Artificial Intelligence
-
-[2] Gabriely, Y. and Rimon, E., 2001. Spanning-tree based coverage of continuous areas by a mobile robot. Annals of mathematics and artificial intelligence
-
-[3] Agmon, N., Hazon, N. and Kaminka, G.A., 2006, May. Constructing spanning trees for efficient multi-robot coverage. ICRA 2006
-
-[4] Zheng, X., Koenig, S., Kempe, D. and Jain, S., 2010. Multirobot forest coverage for weighted and unweighted terrain. IEEE Transactions on Robotics
-
-[5] Kapoutsis, A.C., Chatzichristofis, S.A. and Kosmatopoulos, E.B., 2017. DARP: divide areas algorithm for optimal multi-robot coverage path planning. Journal of Intelligent & Robotic Systems
 
 # Cite as
 
