@@ -152,15 +152,14 @@ if __name__ == '__main__':
                     initial_positions.append((row, col))
 
     portions = []
-    print(bool(args.nep))
     if args.nep:
         for portion in args.portions:
             portions.append(portion)
     else:
         for drone in range(len(initial_positions)):
             portions.append(1/len(initial_positions))
-    print(len(initial_positions))
-    if len(initial_positions) != len(args.portions):
+
+    if len(initial_positions) != len(portions):
         print("Portions should be defined for each drone")
         sys.exit(4)
 
