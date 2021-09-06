@@ -70,6 +70,7 @@ class CalculateTrajectories():
                 eToRemove = Edge(alpha, alpha+1, 1)
                 eToRemoveMirr = Edge(alpha+1, alpha, 1)
                 eToRemove2 = Edge(alpha+2*self.cols, alpha+1+2*self.cols, 1)
+                eToRemove2Mirr = Edge(alpha+1+2*self.cols, alpha+2*self.cols, 1)
 
             if eToRemove in self.allEdges:
                 self.SafeRemoveEdge(eToRemove)
