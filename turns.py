@@ -17,7 +17,6 @@ class turns:
             f'Standard Deviation: {self.std:.3f}\n')
 
     def count_turns(self):
-        # total_turns = []
         for path in self.paths:
             num_turns = -1
             last_move = ""
@@ -33,7 +32,6 @@ class turns:
                 last_move = current_move
             self.turns.append(num_turns)
 
-        # self.turns.append(total_turns)
         self.avg = np.average(self.turns)
         self.std = np.std(self.turns)
 

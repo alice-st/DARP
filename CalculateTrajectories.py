@@ -53,8 +53,6 @@ class CalculateTrajectories():
         self.nodes[to].add(_from)
 
     def RemoveTheAppropriateEdges(self):
-        # int alpha,maxN,minN;
-        # Edge eToRemove,eToRemoveMirr,eToRemove2,eToRemove2Mirr;
         for i in range(self.MSTedges):
             e = self.MSTvector[i]
             maxN = max(e.src, e.dst)
@@ -72,10 +70,6 @@ class CalculateTrajectories():
                 eToRemove = Edge(alpha, alpha+1, 1)
                 eToRemoveMirr = Edge(alpha+1, alpha, 1)
                 eToRemove2 = Edge(alpha+2*self.cols, alpha+1+2*self.cols, 1)
-                eToRemove2Mirr = Edge(alpha+1+2*self.cols, alpha+2*self.cols, 1)
-
-            # import pdb
-            # pdb.set_trace()
 
             if eToRemove in self.allEdges:
                 self.SafeRemoveEdge(eToRemove)

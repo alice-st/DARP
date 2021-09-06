@@ -142,7 +142,6 @@ class visualize_paths():
         # Get cell size, just one since its a square grid.
         cellSize = CONTAINER_WIDTH_HEIGHT/cells
 
-        # VERTICAL DIVISIONS: (0,1,2) for grid(3) for example
         for x in range(cells):
             pygame.draw.line(
                self._VARS['surf'], BLACK,
@@ -181,7 +180,7 @@ class darp_area_visualization(object):
         self.placeCells(self.Assignment_matrix)
         pygame.display.set_caption('Assignment Matrix')
         pygame.display.update()
-        time.sleep(5)
+        # time.sleep(5)
 
     def checkEvents(self):
         for event in pygame.event.get():
@@ -223,7 +222,6 @@ class darp_area_visualization(object):
         # Get cell size, just one since its a square grid.
         cellSize = CONTAINER_WIDTH_HEIGHT/cells
 
-        # VERTICAL DIVISIONS: (0,1,2) for grid(3) for example
         for x in range(cells):
             pygame.draw.line(
                self._VARS['surf'], BLACK,

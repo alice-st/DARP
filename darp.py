@@ -83,7 +83,7 @@ class DARP():
                     self.GridEnv[i, j] = self.droneNo
                     self.A[i, j] = self.droneNo
                     self.droneNo += 1
-                    self.init_robot_pos.append([i, j])
+                    self.init_robot_pos.append((i, j))
                 elif(self.GridEnv[i, j] == 1):
                     self.ob += 1
                     self.GridEnv[i, j] = -2
@@ -168,7 +168,7 @@ class DARP():
 
                 iteration += 1
                 self.assignment_matrix_visualization.placeCells(self.A)
-                time.sleep(0.5)
+                # time.sleep(0.5)
 
             if iteration >= self.MaxIter:
                 self.MaxIter = self.MaxIter/2
@@ -356,9 +356,3 @@ class DARP():
                     distRobot[i, j] = (distRobot[i, j] - MinV)*(1/(MaxV-MinV))
 
         return distRobot
-
-
-# if __name__ == '__main__':
-#     initial_positions = [[0, 0], [0, 1]]
-#     problem = DARP(nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions)
-#     #poly = DARPinPoly(nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions)
