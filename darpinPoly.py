@@ -6,6 +6,8 @@ from Visualization import visualize_paths
 import sys
 import random
 import argparse
+from turns import turns
+from pprint import pprint
 
 
 class DARPinPoly(DARP):
@@ -15,6 +17,8 @@ class DARPinPoly(DARP):
         if not self.success:
             print("DARP did not manage to find a solution for the given configuration!")
             sys.exit(0)
+
+        mode_to_drone_turns = dict()
 
         for mode in range(4):
             MSTs = self.calculateMSTs(self.BinaryRobotRegions, self.droneNo, self.rows, self.cols, mode)
@@ -75,9 +79,16 @@ class DARPinPoly(DARP):
                     subCellsAssignment[2 * i][2 * j + 1] = self.A[i][j]
                     subCellsAssignment[2 * i + 1][2 * j + 1] = self.A[i][j]
 
+            drone_turns = turns(AllRealPaths)
+            drone_turns.count_turns()
+            mode_to_drone_turns[mode] = drone_turns
+
             image = visualize_paths(AllRealPaths, subCellsAssignment, self.droneNo, self.color)
-            # image.visualize_darp_area()
             image.visualize_paths(mode)
+
+        print("\nResults:\n")
+        for mode, val in mode_to_drone_turns.items():
+            print(mode, val)
 
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
