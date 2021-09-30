@@ -82,6 +82,12 @@ python3 darpinPoly.py -obs_pos o1 o2 o3
 
 where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=1, row=0,column=1 --> cell=2 etc.)
 
+* To visualize the results, use:
+
+```
+python3 darpinPoly.py -vis
+```
+
 # Results
 
 Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and Equal portions of the Grid shared between the robots, we obtained the following results:

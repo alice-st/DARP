@@ -8,11 +8,12 @@ import random
 import argparse
 from turns import turns
 from pprint import pprint
+import io
 
 
 class DARPinPoly(DARP):
-    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions):
-        DARP.__init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions)
+    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
+        DARP.__init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization)
 
         if not self.success:
             print("DARP did not manage to find a solution for the given configuration!")
@@ -83,8 +84,9 @@ class DARPinPoly(DARP):
             drone_turns.count_turns()
             mode_to_drone_turns[mode] = drone_turns
 
-            image = visualize_paths(AllRealPaths, subCellsAssignment, self.droneNo, self.color)
-            image.visualize_paths(mode)
+            if self.visualization:
+                image = visualize_paths(AllRealPaths, subCellsAssignment, self.droneNo, self.color)
+                image.visualize_paths(mode)
 
         print("\nResults:\n")
         for mode, val in mode_to_drone_turns.items():
@@ -145,6 +147,10 @@ if __name__ == '__main__':
         nargs='*',
         type=float,
         help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
+    argparser.add_argument(
+        '-vis',
+        action='store_true',
+        help='Visualize results (default: False)')
     args = argparser.parse_args()
 
     rows, cols = args.grid
@@ -205,4 +211,4 @@ if __name__ == '__main__':
     print("Initial Robots' positions", initial_positions)
     print("Portions for each Robot:", portions, "\n")
 
-    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.nep, initial_positions, portions, obstacles_positions)
+    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.nep, initial_positions, portions, obstacles_positions, args.vis)
