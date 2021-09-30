@@ -68,7 +68,7 @@ where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,colu
 * To assign different portions to each Robot (not Equal), use:
 
 ```
-python3 darpinPoly.py -ne -portions d e f
+python3 darpinPoly.py -nep -portions d e f
 
 ```
 
@@ -93,7 +93,7 @@ Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and 
 </p>
 
 ## STC paths for each robot, ensuring complete area coverage
-  
+
 ### Mode = 0 (connection on bottom between the side of the branches of the MST)
 
 <p align="center">
