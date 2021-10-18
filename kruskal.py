@@ -1,4 +1,5 @@
 from Edges import Edge, Graph
+import sys
 
 
 class Kruskal(object):
@@ -22,11 +23,11 @@ class Kruskal(object):
                     if (mode == 0):
                         cost2 = self.rows - i
                     elif mode == 1:
-                        cost2 = i
+                        cost2 = i+1
                     elif mode == 2:
                         cost1 = self.cols - j
                     elif mode == 3:
-                        cost1 = j
+                        cost1 = j+1
 
                     if (i > 0 and A[i-1][j]):
                         self.AddToAllEdges(i*self.cols+j, (i-1)*self.cols+j, cost1)

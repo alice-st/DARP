@@ -127,7 +127,7 @@ if __name__ == '__main__':
         help='Dimensions of the Grid (default: (10, 10))')
     argparser.add_argument(
         '-obs_pos',
-        default=[5, 6, 7],
+        default=[],
         nargs='*',
         type=int,
         help='Dimensions of the Grid (default: (10, 10))')
@@ -155,18 +155,20 @@ if __name__ == '__main__':
 
     rows, cols = args.grid
 
-    cell = 0
     obstacles_positions = []
     initial_positions = []
-    for row in range(rows):
-        for col in range(cols):
-            cell += 1
-            for obstacle in args.obs_pos:
-                if cell == obstacle:
-                    obstacles_positions.append((row, col))
-            for position in args.in_pos:
-                if cell == position:
-                    initial_positions.append((row, col))
+
+    for position in args.in_pos:
+        if position < 0 or position >= rows*cols:
+            print("Initial positions should be inside the Grid.")
+            sys.exit(2)
+        initial_positions.append((position // cols, position % cols))
+
+    for obstacle in args.obs_pos:
+        if obstacle < 0 or obstacle >= rows*cols:
+            print("Obstacles should be inside the Grid.")
+            sys.exit(3)
+        obstacles_positions.append((obstacle // cols, obstacle % cols))
 
     portions = []
     if args.nep:
@@ -186,18 +188,10 @@ if __name__ == '__main__':
         sys.exit(1)
 
     for position in initial_positions:
-        if (position[0] < 0 or position[0] >= rows) or (position[1] < 0 or position[1] >= cols):
-            print("Initial positions should be inside the Grid.")
-            sys.exit(2)
         for obstacle in obstacles_positions:
             if position[0] == obstacle[0] and position[1] == obstacle[1]:
                 print("Initial positions should not be on obstacles")
                 sys.exit(3)
-
-    for obstacle in obstacles_positions:
-        if (obstacle[0] < 0 or obstacle[0] >= rows) or (obstacle[1] < 0 or obstacle[1] >= cols):
-            print("Obstacles should be inside the Grid.")
-            sys.exit(3)
 
     MaxIter = 80000
     CCvariation = 0.01
