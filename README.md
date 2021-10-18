@@ -63,7 +63,7 @@ where x, y are the desired rows and columns of the Grid respectively (default: 1
 python3 darpinPoly.py -in_pos a b c
 
 ```
-where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,column=0 --> cell=1, row=0,column=1 --> cell=2 etc.)
+where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
 
 * To assign different portions to each Robot (not Equal), use:
 
