@@ -80,7 +80,7 @@ where d e f are the portions assigned to Robots a, b and c respectively. Their s
 python3 darpinPoly.py -obs_pos o1 o2 o3
 ```
 
-where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=1, row=0,column=1 --> cell=2 etc.)
+where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=2 etc.)
 
 * To visualize the results, use:
 
