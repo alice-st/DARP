@@ -6,16 +6,54 @@ import random
 from scipy import ndimage
 from Visualization import darp_area_visualization
 import time
-import os
 import random
+import os
 from numba import njit
-from numba.experimental import jitclass
 np.set_printoptions(threshold=sys.maxsize)
 
 random.seed(1)
 os.environ['PYTHONHASHSEED'] = str(1)
 np.random.seed(1)
 
+
+@njit    
+def assign(droneNo,rows,cols,init_robot_pos,GridEnv,MetricMatrix,A):
+        BWlist = np.zeros((droneNo, rows,cols))
+        for r in range(droneNo):
+            BWlist[r, init_robot_pos[r][0], init_robot_pos[r][1]] = 1
+
+        ArrayOfElements = np.zeros(droneNo)
+        for i in range(rows):
+            for j in range(cols):
+                if GridEnv[i, j] == -1:
+                    minV = MetricMatrix[0, i, j]
+                    indMin = 0
+                    for r in range(droneNo):
+                        if MetricMatrix[r, i, j] < minV:
+                            minV = MetricMatrix[r, i, j]
+                            indMin = r
+
+                    A[i][j] = indMin
+                    BWlist[indMin, i, j] = 1
+                    ArrayOfElements[indMin] += 1
+
+                elif GridEnv[i, j] == -2:
+                    A[i, j] = droneNo
+        return BWlist,A,ArrayOfElements
+@njit
+def constructBinaryImages(A, val,rows,cols):
+        BinaryRobot = np.copy(A)
+        BinaryNonRobot = np.copy(A)
+        for i in range(rows):
+            for j in range(cols):
+                if A[i, j] == 1:
+                    BinaryRobot[i, j] = 1
+                    BinaryNonRobot[i, j] = 0
+                elif A[i, j] != 0:
+                    BinaryRobot[i, j] = 0
+                    BinaryNonRobot[i, j] = 1
+
+        return BinaryRobot, BinaryNonRobot
 class DARP():
     def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
         self.rows = nx
@@ -83,7 +121,7 @@ class DARP():
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
 
         self.success = self.update()
-        
+
     def defineRobotsObstacles(self):
         for i in range(self.rows):
             for j in range(self.cols):
@@ -113,7 +151,8 @@ class DARP():
             iteration = 0
 
             while iteration <= self.MaxIter and not cancelled:
-                self.assign()
+                #self.assign()
+                self.BWlist, self.A, self.ArrayOfElements= assign(self.droneNo, self.rows, self.cols,self.init_robot_pos,self.GridEnv,self.MetricMatrix,self.A)
                 ConnectedMultiplierList = np.ones((self.droneNo, self.rows, self.cols))
                 ConnectedRobotRegions = np.zeros(self.droneNo)
                 plainErrors = np.zeros((self.droneNo))
@@ -127,7 +166,7 @@ class DARP():
                     num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
                     if num_labels > 2:
                         ConnectedRobotRegions[r] = False
-                        BinaryRobot, BinaryNonRobot = self.constructBinaryImages(labels_im, r)
+                        BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, r,self.rows,self.cols)
                         ConnectedMultiplier = self.CalcConnectedMultiplier(
                             self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
                             self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot))
@@ -186,15 +225,18 @@ class DARP():
 
         self.getBinaryRobotRegions()
         return success
-    
-    def getBinaryRobotRegions(self):
 
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.A[i][j] < self.droneNo:
-                    self.BinaryRobotRegions[int(self.A[i, j]), i, j] = True
-                # else:
-                #     self.BinaryRobotRegions[int(self.A[i, j]), i, j] = False
+    def getBinaryRobotRegions(self):
+    
+        ind=np.where(self.A<self.droneNo)
+        temp=(self.A[ind].astype(int),)+ind
+        self.BinaryRobotRegions[temp]=True
+    """for i in range(self.rows):
+        for j in range(self.cols):
+            if self.A[i][j] < self.droneNo:
+                self.BinaryRobotRegions[int(self.A[i, j]), i, j] = True"""
+            # else:
+            #     self.BinaryRobotRegions[int(self.A[i, j]), i, j] = False
 
     def generateRandomMatrix(self):
         RandomMa = np.zeros((self.rows, self.cols))
@@ -205,10 +247,7 @@ class DARP():
 
     def FinalUpdateOnMetricMatrix(self, CM, RM, currentOne, CC):
         MMnew = np.zeros((self.rows, self.cols))
-
-        for i in range(self.rows):
-            for j in range(self.cols):
-                MMnew[i, j] = currentOne[i, j]*CM[i, j]*RM[i, j]*CC[i, j]
+        MMnew = currentOne*CM*RM*CC
 
         return MMnew
 
@@ -220,13 +259,11 @@ class DARP():
         return True
 
     def update_connectivity(self):
+        self.connectivity=np.zeros((self.droneNo, self.rows, self.cols))
         for i in range(self.droneNo):
-            for j in range(self.rows):
-                for k in range(self.cols):
-                    if self.A[j, k] == i:
-                        self.connectivity[i, j, k] = 255
-                    else:
-                        self.connectivity[i, j, k] = 0
+            #mask=np.unravel_index(np.where(self.A.ravel()==i),self.A.shape)
+            mask=np.where(self.A==i)
+            self.connectivity[i,mask[0],mask[1]]=255
 
     def constructBinaryImages(self, A, val):
         BinaryRobot = np.copy(A)
@@ -241,29 +278,28 @@ class DARP():
                     BinaryNonRobot[i, j] = 1
 
         return BinaryRobot, BinaryNonRobot
-
+    
+    #def constructBinaryImages(self, A, val):
+        #BinaryRobot = np.copy(A)
+        #BinaryNonRobot = np.copy(A)
+        #BinaryRobot=np.where(A!=1,A,0)
+        #BinaryNonRobot=1-BinaryRobot
+        #return BinaryRobot, BinaryNonRobot
     def assign(self):
         self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
         for r in range(self.droneNo):
             self.BWlist[r, self.init_robot_pos[r][0], self.init_robot_pos[r][1]] = 1
 
         self.ArrayOfElements = np.zeros(self.droneNo)
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.GridEnv[i, j] == -1:
-                    minV = self.MetricMatrix[0, i, j]
-                    indMin = 0
-                    for r in range(self.droneNo):
-                        if self.MetricMatrix[r, i, j] < minV:
-                            minV = self.MetricMatrix[r, i, j]
-                            indMin = r
-
-                    self.A[i][j] = indMin
-                    self.BWlist[indMin, i, j] = 1
-                    self.ArrayOfElements[indMin] += 1
-
-                elif self.GridEnv[i, j] == -2:
-                    self.A[i, j] = self.droneNo
+        ind=np.where(self.GridEnv==-1)
+        #ind=np.unravel_index(np.where(self.GridEnv.ravel()==-1),self.GridEnv.shape)
+        for (i,j) in zip(ind[0],ind[1]):
+            indMin=np.argmin(self.MetricMatrix[:, i, j])
+            self.A[i][j] = indMin
+            self.BWlist[indMin, i, j] = 1
+            self.ArrayOfElements[indMin] += 1
+        ind=np.where(self.GridEnv==-2)
+        self.A[ind] = self.droneNo
 
     # Construct Assignment Matrix
     def construct_Assignment_Matrix(self):
@@ -314,15 +350,13 @@ class DARP():
 
     def calculateCriterionMatrix(self, TilesImportance, MinimumImportance, MaximumImportance, correctionMult, smallerthan0,):
         returnCrit = np.zeros((self.rows, self.cols))
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.importance:
+        if self.importance:
                     if smallerthan0:
-                        returnCrit[i, j] = (TilesImportance[i, j] - MinimumImportance)*((correctionMult-1)/(MaximumImportance-MinimumImportance)) + 1
+                        returnCrit = (TilesImportance- MinimumImportance)*((correctionMult-1)/(MaximumImportance-MinimumImportance)) + 1
                     else:
-                        returnCrit[i, j] = (TilesImportance[i, j] - MinimumImportance)*((1-correctionMult)/(MaximumImportance-MinimumImportance)) + correctionMult
-                else:
-                    returnCrit[i, j] = correctionMult
+                        returnCrit = (TilesImportance- MinimumImportance)*((1-correctionMult)/(MaximumImportance-MinimumImportance)) + correctionMult
+        else:
+            returnCrit[:,:] = correctionMult
 
         return returnCrit
 
