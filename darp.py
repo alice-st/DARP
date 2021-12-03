@@ -6,9 +6,15 @@ import random
 from scipy import ndimage
 from Visualization import darp_area_visualization
 import time
-
+import os
+import random
+from numba import njit
+from numba.experimental import jitclass
 np.set_printoptions(threshold=sys.maxsize)
 
+random.seed(1)
+os.environ['PYTHONHASHSEED'] = str(1)
+np.random.seed(1)
 
 class DARP():
     def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
@@ -77,7 +83,7 @@ class DARP():
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
 
         self.success = self.update()
-
+        
     def defineRobotsObstacles(self):
         for i in range(self.rows):
             for j in range(self.cols):
@@ -180,7 +186,7 @@ class DARP():
 
         self.getBinaryRobotRegions()
         return success
-
+    
     def getBinaryRobotRegions(self):
 
         for i in range(self.rows):
@@ -193,9 +199,7 @@ class DARP():
     def generateRandomMatrix(self):
         RandomMa = np.zeros((self.rows, self.cols))
         randomlevel = 0.0001
-        for i in range(self.rows):
-            for j in range(self.cols):
-                RandomMa[i][j] = 2*randomlevel*random.uniform(0, 1) + (1 - randomlevel)
+        RandomMa = 2*randomlevel*np.random.uniform(0, 1,size=RandomMa.shape) + (1 - randomlevel)
 
         return RandomMa
 
