@@ -54,6 +54,25 @@ def constructBinaryImages(A, val,rows,cols):
                     BinaryNonRobot[i, j] = 1
 
         return BinaryRobot, BinaryNonRobot
+@njit
+def CalcConnectedMultiplier(rows,cols, dist1, dist2,CCvariation):
+        returnM = np.zeros((rows, cols))
+        MaxV = 0
+        MinV = 2**30
+
+        for i in range(rows):
+            for j in range(cols):
+                returnM[i, j] = dist1[i, j] - dist2[i, j]
+                if MaxV < returnM[i, j]:
+                    MaxV = returnM[i, j]
+                if MinV > returnM[i, j]:
+                    MinV = returnM[i, j]
+
+        for i in range(rows):
+            for j in range(cols):
+                returnM[i, j] = (returnM[i, j]-MinV)*((2*CCvariation)/(MaxV - MinV)) + (1-CCvariation)
+
+        return returnM
 class DARP():
     def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
         self.rows = nx
@@ -167,9 +186,9 @@ class DARP():
                     if num_labels > 2:
                         ConnectedRobotRegions[r] = False
                         BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, r,self.rows,self.cols)
-                        ConnectedMultiplier = self.CalcConnectedMultiplier(
+                        ConnectedMultiplier = CalcConnectedMultiplier(self.rows,self.cols,
                             self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
-                            self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot))
+                            self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot),self.CCvariation)
                     ConnectedMultiplierList[r, :, :] = ConnectedMultiplier
                     plainErrors[r] = self.ArrayOfElements[r]/(self.DesireableAssign[r]*self.droneNo)
                     if plainErrors[r] < downThres:
@@ -279,12 +298,7 @@ class DARP():
 
         return BinaryRobot, BinaryNonRobot
     
-    #def constructBinaryImages(self, A, val):
-        #BinaryRobot = np.copy(A)
-        #BinaryNonRobot = np.copy(A)
-        #BinaryRobot=np.where(A!=1,A,0)
-        #BinaryNonRobot=1-BinaryRobot
-        #return BinaryRobot, BinaryNonRobot
+
     def assign(self):
         self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
         for r in range(self.droneNo):
@@ -360,24 +374,7 @@ class DARP():
 
         return returnCrit
 
-    def CalcConnectedMultiplier(self, dist1, dist2):
-        returnM = np.zeros((self.rows, self.cols))
-        MaxV = 0
-        MinV = sys.float_info.max
 
-        for i in range(self.rows):
-            for j in range(self.cols):
-                returnM[i, j] = dist1[i, j] - dist2[i, j]
-                if MaxV < returnM[i, j]:
-                    MaxV = returnM[i, j]
-                if MinV > returnM[i, j]:
-                    MinV = returnM[i, j]
-
-        for i in range(self.rows):
-            for j in range(self.cols):
-                returnM[i, j] = (returnM[i, j]-MinV)*((2*self.CCvariation)/(MaxV - MinV)) + (1-self.CCvariation)
-
-        return returnM
 
     def NormalizedEuclideanDistanceBinary(self, RobotR, BinaryRobot, BinaryNonRobot):
         if RobotR:
@@ -389,11 +386,10 @@ class DARP():
         MinV = np.min(distRobot)
 
         #Normalization
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if RobotR:
-                    distRobot[i, j] = (distRobot[i, j] - MinV)*(1/(MaxV-MinV)) + 1
-                else:
-                    distRobot[i, j] = (distRobot[i, j] - MinV)*(1/(MaxV-MinV))
+        if RobotR:
+            distRobot = (distRobot - MinV)*(1/(MaxV-MinV)) + 1
+        else:
+            distRobot = (distRobot - MinV)*(1/(MaxV-MinV))
 
         return distRobot
+
