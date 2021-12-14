@@ -2,20 +2,22 @@ import numpy as np
 import copy
 import sys
 import cv2
-import random
 from scipy import ndimage
 from Visualization import darp_area_visualization
-import time
 
 np.set_printoptions(threshold=sys.maxsize)
 
 
-class DARP():
-    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
+class DARP:
+    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions,
+                 initial_positions, portions, obstacles_positions, visualization):
         self.rows = nx
         self.cols = ny
+        self.effectiveSize = 0
         self.visualization = visualization
         empty_space = []
+
+        # TODO fix this input to be flexible in all dimensions
         if nx > ny:
             for j in range(ny, nx):
                 for i in range(nx):
@@ -27,70 +29,73 @@ class DARP():
                     empty_space.append((j, i))
             self.rows = self.cols
 
-        self.GridEnv = np.full(shape=(self.rows, self.cols), fill_value=0)
-
-        for cell in empty_space:
-            self.GridEnv[cell[0], cell[1]] = 1
-
-        if obstacles_positions != []:
-            for obstacle in obstacles_positions:
-                self.GridEnv[obstacle[0], obstacle[1]] = 1
-        for pos in initial_positions:
-            self.GridEnv[pos[0], pos[1]] = 2
-
-        print("Given Grid area:")
-        print(self.GridEnv)
-
-        self.droneNo = 0
         self.A = np.zeros((self.rows, self.cols))
-        self.init_robot_pos = []
         self.ob = 0
-        self.defineRobotsObstacles()
+        self.GridEnv = self.defineGridEnv(initial_positions, obstacles_positions, empty_space)
+        # print("Given Grid area:")
+        # print(self.GridEnv)
+
+        self.init_robot_pos = initial_positions
         self.MaxIter = MaxIter
         self.CCvariation = CCvariation
         self.randomLevel = randomLevel
         self.dcells = dcells
         self.importance = importance
         self.notEqualPortions = notEqualPortions
-        self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
-        self.BinaryRobotRegions = np.zeros((self.droneNo, self.rows, self.cols), dtype=bool)
+        self.connectivity = np.zeros((len(self.init_robot_pos), self.rows, self.cols))
+        self.BinaryRobotRegions = np.zeros((len(self.init_robot_pos), self.rows, self.cols), dtype=bool)
 
         # If user has not defined custom portions divide area equally for all drones
-        self.Rportions = np.zeros((self.droneNo))
-        if (not notEqualPortions):
-            for i in range(self.droneNo):
-                self.Rportions[i] = 1.0/self.droneNo
+        self.Rportions = np.zeros(len(self.init_robot_pos))
+        if notEqualPortions:
+            if len(self.init_robot_pos) != len(portions):
+                print("notEqualPortions was set to True, but portions number and initial robot number don't match")
+                sys.exit(5)
+            else:
+                for idx, robot in enumerate(self.init_robot_pos):
+                    self.Rportions[idx] = portions[idx]
         else:
-            for i in range(self.droneNo):
-                self.Rportions[i] = portions[i]
+            for idx, robot in enumerate(self.init_robot_pos):
+                self.Rportions[idx] = 1.0 / len(self.init_robot_pos)
 
-        self.AllDistances, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance= self.construct_Assignment_Matrix()
+        self.AllDistances, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance = self.construct_Assignment_Matrix()
         self.MetricMatrix = copy.deepcopy(self.AllDistances)
-        self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
-        self.ArrayOfElements = np.zeros(self.droneNo)
-        self.color = []
+        self.BWlist = np.zeros((len(self.init_robot_pos), self.rows, self.cols))
+        self.ArrayOfElements = np.zeros(len(self.init_robot_pos))
 
-        for r in range(self.droneNo):
+        self.color = []
+        for robot in self.init_robot_pos:
             self.color.append(list(np.random.choice(range(256), size=3)))
 
         if self.visualization:
-            self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
-
+            self.assignment_matrix_visualization = darp_area_visualization(self.A, len(self.init_robot_pos), self.color, self.init_robot_pos)
         self.success = self.update()
 
-    def defineRobotsObstacles(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.GridEnv[i, j] == 2:
-                    self.GridEnv[i, j] = self.droneNo
-                    self.A[i, j] = self.droneNo
-                    self.droneNo += 1
-                    self.init_robot_pos.append((i, j))
-                elif(self.GridEnv[i, j] == 1):
-                    self.ob += 1
-                    self.GridEnv[i, j] = -2
-                else:
-                    self.GridEnv[i, j] = -1
+    def defineGridEnv(self, init_robot_pos, obstacles_positions, empty_space):
+        """
+        Defines and returns the GridEnv(iroment) array for later use.
+        All tiles except obstacles, empty_space, initial robo start points will have the value -1.
+        :param init_robot_pos: The initial robot start points (array) - tile value will be their array.index number
+        :param obstacles_positions: The given array of obstacle tiles. obstacle tile value is -2
+        :param empty_space: The area/tiles positions (array) which are defined like obstacle tiles
+        :return: The prepared GridEnv
+        """
+
+        local_grid_env = np.full(shape=(self.rows, self.cols), fill_value=-1)  # create non obstacle map with value -1
+
+        # initial robot tiles will have their array.index as value
+        for idx, robot in enumerate(init_robot_pos):
+            local_grid_env[robot] = idx
+            self.A[robot] = idx
+
+        # obstacle tiles value is -2
+        self.ob = len(obstacles_positions)
+        for idx, obstacle_pos in enumerate(obstacles_positions):
+            local_grid_env[obstacle_pos[0], obstacle_pos[1]] = -2
+        for idx, es_pos in enumerate(empty_space):
+            local_grid_env[es_pos] = -2
+
+        return local_grid_env
 
     def update(self):
         success = False
@@ -98,83 +103,84 @@ class DARP():
         criterionMatrix = np.zeros((self.rows, self.cols))
 
         while self.termThr <= self.dcells and not success and not cancelled:
-            downThres = (self.Notiles - self.termThr*(self.droneNo-1))/(self.Notiles*self.droneNo)
-            upperThres = (self.Notiles + self.termThr)/(self.Notiles*self.droneNo)
+            downThres = (self.Notiles - self.termThr * (len(self.init_robot_pos) - 1)) / (
+                    self.Notiles * len(self.init_robot_pos))
+            upperThres = (self.Notiles + self.termThr) / (self.Notiles * len(self.init_robot_pos))
 
             success = True
 
-            #main optimization loop
+            # main optimization loop
             iteration = 0
 
             while iteration <= self.MaxIter and not cancelled:
                 self.assign()
-                ConnectedMultiplierList = np.ones((self.droneNo, self.rows, self.cols))
-                ConnectedRobotRegions = np.zeros(self.droneNo)
-                plainErrors = np.zeros((self.droneNo))
-                divFairError = np.zeros((self.droneNo))
+                ConnectedMultiplierList = np.ones((len(self.init_robot_pos), self.rows, self.cols))
+                ConnectedRobotRegions = np.zeros(len(self.init_robot_pos))
+                plainErrors = np.zeros((len(self.init_robot_pos)))
+                divFairError = np.zeros((len(self.init_robot_pos)))
 
-                for r in range(self.droneNo):
+                for idx, robot in enumerate(self.init_robot_pos):
                     ConnectedMultiplier = np.ones((self.rows, self.cols))
-                    ConnectedRobotRegions[r] = True
+                    ConnectedRobotRegions[idx] = True
                     self.update_connectivity()
-                    image = np.uint8(self.connectivity[r, :, :])
+                    image = np.uint8(self.connectivity[idx, :, :])
                     num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
                     if num_labels > 2:
-                        ConnectedRobotRegions[r] = False
-                        BinaryRobot, BinaryNonRobot = self.constructBinaryImages(labels_im, r)
+                        ConnectedRobotRegions[idx] = False
+                        BinaryRobot, BinaryNonRobot = self.constructBinaryImages(labels_im, robot)
                         ConnectedMultiplier = self.CalcConnectedMultiplier(
-                            self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
-                            self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot))
-                    ConnectedMultiplierList[r, :, :] = ConnectedMultiplier
-                    plainErrors[r] = self.ArrayOfElements[r]/(self.DesireableAssign[r]*self.droneNo)
-                    if plainErrors[r] < downThres:
-                        divFairError[r] = downThres - plainErrors[r]
-                    elif plainErrors[r] > upperThres:
-                        divFairError[r] = upperThres - plainErrors[r]
+                            self.NormalizedEuclideanDistanceBinary(True, BinaryRobot),
+                            self.NormalizedEuclideanDistanceBinary(False, BinaryNonRobot))
+                    ConnectedMultiplierList[idx, :, :] = ConnectedMultiplier
+                    plainErrors[idx] = self.ArrayOfElements[idx] / (
+                            self.DesireableAssign[idx] * len(self.init_robot_pos))
+                    if plainErrors[idx] < downThres:
+                        divFairError[idx] = downThres - plainErrors[idx]
+                    elif plainErrors[idx] > upperThres:
+                        divFairError[idx] = upperThres - plainErrors[idx]
 
                 if self.IsThisAGoalState(self.termThr, ConnectedRobotRegions):
-                    print("\nFinal Assignment Matrix:")
-                    print(self.A)
+                    print("\nFinal Assignment Matrix (" + str(iteration) + " Iterations, Tiles per Robot " + str(self.ArrayOfElements) + ")")
+                    # print(self.A)
                     break
 
                 TotalNegPerc = 0
                 totalNegPlainErrors = 0
-                correctionMult = np.zeros(self.droneNo)
+                correctionMult = np.zeros(len(self.init_robot_pos))
 
-                for r in range(self.droneNo):
-                    if divFairError[r] < 0:
-                        TotalNegPerc += np.absolute(divFairError[r])
-                        totalNegPlainErrors += plainErrors[r]
+                for idx, robot in enumerate(self.init_robot_pos):
+                    if divFairError[idx] < 0:
+                        TotalNegPerc += np.absolute(divFairError[idx])
+                        totalNegPlainErrors += plainErrors[idx]
+                    correctionMult[idx] = 1
 
-                    correctionMult[r] = 1
-
-                for r in range(self.droneNo):
+                # Restore Fairness among the different partitions
+                for idx, robot in enumerate(self.init_robot_pos):
                     if totalNegPlainErrors != 0:
-                        if divFairError[r] < 0:
-                            correctionMult[r] = 1 + (plainErrors[r]/totalNegPlainErrors)*(TotalNegPerc/2)
+                        if divFairError[idx] < 0:
+                            correctionMult[idx] = 1 + (plainErrors[idx] / totalNegPlainErrors) * (TotalNegPerc / 2)
                         else:
-                            correctionMult[r] = 1 - (plainErrors[r]/totalNegPlainErrors)*(TotalNegPerc/2)
+                            correctionMult[idx] = 1 - (plainErrors[idx] / totalNegPlainErrors) * (TotalNegPerc / 2)
 
                         criterionMatrix = self.calculateCriterionMatrix(
-                                self.TilesImportance[r],
-                                self.MinimumImportance[r],
-                                self.MaximumImportance[r],
-                                correctionMult[r],
-                                divFairError[r] < 0)
+                            self.TilesImportance[idx],
+                            self.MinimumImportance[idx],
+                            self.MaximumImportance[idx],
+                            correctionMult[idx],
+                            divFairError[idx] < 0)
 
-                    self.MetricMatrix[r] = self.FinalUpdateOnMetricMatrix(
-                            criterionMatrix,
-                            self.generateRandomMatrix(),
-                            self.MetricMatrix[r],
-                            ConnectedMultiplierList[r, :, :])
+                    self.MetricMatrix[idx] = self.FinalUpdateOnMetricMatrix(
+                        criterionMatrix,
+                        self.MetricMatrix[idx],
+                        ConnectedMultiplierList[idx, :, :])
 
                 iteration += 1
                 if self.visualization:
-                    self.assignment_matrix_visualization.placeCells(self.A)
+                    self.assignment_matrix_visualization.placeCells(iteration_number=iteration)
                 # time.sleep(0.5)
 
             if iteration >= self.MaxIter:
-                self.MaxIter = self.MaxIter/2
+                self.MaxIter = self.MaxIter / 2
                 success = False
                 self.termThr += 1
 
@@ -182,180 +188,207 @@ class DARP():
         return success
 
     def getBinaryRobotRegions(self):
-
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.A[i][j] < self.droneNo:
-                    self.BinaryRobotRegions[int(self.A[i, j]), i, j] = True
-                # else:
-                #     self.BinaryRobotRegions[int(self.A[i, j]), i, j] = False
+        """
+        Generate a Bool Matrix for every robot's tile area.
+        :return: Manipulates BinaryRobotRegions
+        """
+        ind = np.where(self.A < len(self.init_robot_pos))
+        temp = (self.A[ind].astype(int),) + ind
+        self.BinaryRobotRegions[temp] = True
 
     def generateRandomMatrix(self):
-        RandomMa = np.zeros((self.rows, self.cols))
-        randomlevel = 0.0001
-        for i in range(self.rows):
-            for j in range(self.cols):
-                RandomMa[i][j] = 2*randomlevel*random.uniform(0, 1) + (1 - randomlevel)
+        """
+        Generates a matrix in map.shape with a random value for every tiles (around 1)
+        :return: RandomMatrix
+        """
+        RandomMatrix = 2 * self.randomLevel * np.random.uniform(0, 1, size=(self.rows, self.cols)) + (
+                1 - self.randomLevel)
+        return RandomMatrix
 
-        return RandomMa
-
-    def FinalUpdateOnMetricMatrix(self, CM, RM, currentOne, CC):
-        MMnew = np.zeros((self.rows, self.cols))
-
-        for i in range(self.rows):
-            for j in range(self.cols):
-                MMnew[i, j] = currentOne[i, j]*CM[i, j]*RM[i, j]*CC[i, j]
-
+    def FinalUpdateOnMetricMatrix(self, CM, currentMetricMatrix, CC):
+        """
+        Calculates the Final Metric Matrix with criterionMatrix, RandomMatrix, MetricMatrix, ConnectedMultiplierList
+        :param CM: criterionMatrix
+        :param currentMetricMatrix: current MetricMatrix of chosen robot which needs to get modified
+        :param CC: ConnectedMultiplierMatrix of chosen robot
+        :return: new MetricMatrix
+        """
+        MMnew = currentMetricMatrix * CM * self.generateRandomMatrix() * CC
         return MMnew
 
     def IsThisAGoalState(self, thresh, connectedRobotRegions):
-        for r in range(self.droneNo):
-            #TODO if thresh == 0?
-            if np.absolute(self.DesireableAssign[r] - self.ArrayOfElements[r]) > thresh or not connectedRobotRegions[r]:
-                return False
-        return True
+        """
+        Determines if the finishing criterion of the DARP algorithm is met.
+        :param thresh: Sets the possible difference between the number of tiles per robot and their desired assignment
+        :param connectedRobotRegions: needs array of 'is the tile area of robot x fully connected' or not
+        :return: True, if criteria fits; False, if criteria aren't met
+        """
+        is_goalstate_met_array = np.full(len(self.init_robot_pos), False)
+
+        for idx, r in enumerate(self.init_robot_pos):
+            # the python criterion
+            if np.absolute(self.DesireableAssign[idx] - self.ArrayOfElements[idx]) > thresh or not \
+                    connectedRobotRegions[idx]:
+                is_goalstate_met_array[idx] = False
+            else:
+                is_goalstate_met_array[idx] = True
+
+        if is_goalstate_met_array.all():
+            return True
+        else:
+            return False
 
     def update_connectivity(self):
-        for i in range(self.droneNo):
-            for j in range(self.rows):
-                for k in range(self.cols):
-                    if self.A[j, k] == i:
-                        self.connectivity[i, j, k] = 255
-                    else:
-                        self.connectivity[i, j, k] = 0
+        """
+        Updates the self.connectivity maps after the last calculation.
+        :return: Nothing
+        """
+        for idx, r in enumerate(self.init_robot_pos):
+            self.connectivity[idx] = np.where(self.A == idx, 255, 0)
 
-    def constructBinaryImages(self, A, val):
-        BinaryRobot = np.copy(A)
-        BinaryNonRobot = np.copy(A)
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if A[i, j] == 1:
-                    BinaryRobot[i, j] = 1
-                    BinaryNonRobot[i, j] = 0
-                elif A[i, j] != 0:
-                    BinaryRobot[i, j] = 0
-                    BinaryNonRobot[i, j] = 1
+    def constructBinaryImages(self, area_tiles, robot_start_point):
+        """
+        Returns 2 maps in the given area_tiles.shape
+        - robot_tiles_binary: where all tiles around + robot_start_point are ones, the rest is zero
+        - nonrobot_tiles_binary: where tiles which aren't background and not around the robot_start_point are ones, rest is zero
+        :param area_tiles: map of tiles with at least 3 different labels, 0 must always be the background
+        :param robot_start_point: is needed to determine which area of connected tiles should be BinaryRobot area
+        :return: robot_tiles_binary, nonrobot_tiles_binary
+        """
+        # area_map where all tiles with the value of the robot_start_point are 1s end the rest is 0
+        robot_tiles_binary = np.where(area_tiles == area_tiles[robot_start_point], 1, 0)
 
-        return BinaryRobot, BinaryNonRobot
+        # background in area_tiles always has the value 0
+        nonrobot_tiles_binary = np.where((area_tiles > 0) & (area_tiles != area_tiles[robot_start_point]), 1, 0)
+        return robot_tiles_binary, nonrobot_tiles_binary
 
     def assign(self):
-        self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
-        for r in range(self.droneNo):
-            self.BWlist[r, self.init_robot_pos[r][0], self.init_robot_pos[r][1]] = 1
+        self.BWlist = np.zeros((len(self.init_robot_pos), self.rows, self.cols))
+        for idx, robot in enumerate(self.init_robot_pos):
+            self.BWlist[idx, robot[0], robot[1]] = 1
 
-        self.ArrayOfElements = np.zeros(self.droneNo)
+        self.ArrayOfElements = np.zeros(len(self.init_robot_pos))
         for i in range(self.rows):
             for j in range(self.cols):
+                # if non obstacle tile
                 if self.GridEnv[i, j] == -1:
-                    minV = self.MetricMatrix[0, i, j]
-                    indMin = 0
-                    for r in range(self.droneNo):
-                        if self.MetricMatrix[r, i, j] < minV:
-                            minV = self.MetricMatrix[r, i, j]
-                            indMin = r
+                    minV = self.MetricMatrix[0, i, j]  # finding minimal value from here on (argmin)
+                    indMin = 0  # number of assigned robot of tile (i,j)
+                    for idx, robot in enumerate(self.init_robot_pos):
+                        if self.MetricMatrix[
+                            idx, i, j] < minV:  # the actual decision making if distance of tile is lower for one robo startpoint than to another
+                            minV = self.MetricMatrix[idx, i, j]
+                            indMin = idx
 
                     self.A[i][j] = indMin
                     self.BWlist[indMin, i, j] = 1
                     self.ArrayOfElements[indMin] += 1
 
+                # if obstacle tile
                 elif self.GridEnv[i, j] == -2:
-                    self.A[i, j] = self.droneNo
+                    self.A[i, j] = len(self.init_robot_pos)
 
     # Construct Assignment Matrix
     def construct_Assignment_Matrix(self):
-        Notiles = self.rows*self.cols
-        fair_division = 1/self.droneNo
-        effectiveSize = Notiles - self.droneNo - self.ob
+        Notiles = self.rows * self.cols
+        self.effectiveSize = Notiles - len(self.init_robot_pos) - self.ob
+        print("Effective Size of Tiles: " + str(self.effectiveSize))
         termThr = 0
 
-        if effectiveSize % self.droneNo != 0:
+        if self.effectiveSize % len(self.init_robot_pos) != 0:
             termThr = 1
 
-        DesireableAssign = np.zeros(self.droneNo)
-        MaximunDist = np.zeros(self.droneNo)
-        MaximumImportance = np.zeros(self.droneNo)
-        MinimumImportance = np.zeros(self.droneNo)
+        DesireableAssign = np.zeros(len(self.init_robot_pos))
+        MaximunDist = np.zeros(len(self.init_robot_pos))
+        MaximumImportance = np.zeros(len(self.init_robot_pos))
+        MinimumImportance = np.zeros(len(self.init_robot_pos))
 
-        for i in range(self.droneNo):
-            DesireableAssign[i] = effectiveSize * self.Rportions[i]
-            MinimumImportance[i] = sys.float_info.max
-            if (DesireableAssign[i] != int(DesireableAssign[i]) and termThr != 1):
-                termThr = 1
+        for idx, robot in enumerate(self.init_robot_pos):
+            DesireableAssign[idx] = self.effectiveSize * self.Rportions[idx]
+            MinimumImportance[idx] = sys.float_info.max
+            if DesireableAssign[idx] != int(DesireableAssign[idx]) and termThr != 1:
+                termThr = 1  # threshold value of tiles which can be freely moved between assigned robot areas
 
-        AllDistances = np.zeros((self.droneNo, self.rows, self.cols))
-        TilesImportance = np.zeros((self.droneNo, self.rows, self.cols))
+        AllDistances = np.zeros((len(self.init_robot_pos), self.rows, self.cols))
+        TilesImportance = np.zeros((len(self.init_robot_pos), self.rows, self.cols))
 
         for x in range(self.rows):
             for y in range(self.cols):
                 tempSum = 0
-                for r in range(self.droneNo):
-                    AllDistances[r, x, y] = np.linalg.norm(np.array(self.init_robot_pos[r]) - np.array((x, y)))  # E!
-                    if AllDistances[r, x, y] > MaximunDist[r]:
-                        MaximunDist[r] = AllDistances[r, x, y]
-                    tempSum += AllDistances[r, x, y]
+                for idx, robot in enumerate(self.init_robot_pos):
+                    AllDistances[idx, x, y] = np.linalg.norm(np.array(robot) - np.array((x, y)))  # E!
+                    if AllDistances[idx, x, y] > MaximunDist[idx]:
+                        MaximunDist[idx] = AllDistances[idx, x, y]
+                    tempSum += AllDistances[idx, x, y]
 
-                for r in range(self.droneNo):
-                    if tempSum - AllDistances[r, x, y] != 0:
-                        TilesImportance[r, x, y] = 1/(tempSum - AllDistances[r, x, y])
+                for idx, robot in enumerate(self.init_robot_pos):
+                    if tempSum - AllDistances[idx, x, y] != 0:
+                        TilesImportance[idx, x, y] = 1 / (tempSum - AllDistances[idx, x, y])
                     else:
-                        TilesImportance[r, x, y] = 1
+                        TilesImportance[idx, x, y] = 1
                     # Todo FixMe!
-                    if TilesImportance[r, x, y] > MaximumImportance[r]:
-                        MaximumImportance[r] = TilesImportance[r, x, y]
+                    if TilesImportance[idx, x, y] > MaximumImportance[idx]:
+                        MaximumImportance[idx] = TilesImportance[idx, x, y]
 
-                    if TilesImportance[r, x, y] < MinimumImportance[r]:
-                        MinimumImportance[r] = TilesImportance[r, x, y]
+                    if TilesImportance[idx, x, y] < MinimumImportance[idx]:
+                        MinimumImportance[idx] = TilesImportance[idx, x, y]
 
         return AllDistances, termThr, Notiles, DesireableAssign, TilesImportance, MinimumImportance, MaximumImportance
 
-    def calculateCriterionMatrix(self, TilesImportance, MinimumImportance, MaximumImportance, correctionMult, smallerthan0,):
-        returnCrit = np.zeros((self.rows, self.cols))
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.importance:
-                    if smallerthan0:
-                        returnCrit[i, j] = (TilesImportance[i, j] - MinimumImportance)*((correctionMult-1)/(MaximumImportance-MinimumImportance)) + 1
-                    else:
-                        returnCrit[i, j] = (TilesImportance[i, j] - MinimumImportance)*((1-correctionMult)/(MaximumImportance-MinimumImportance)) + correctionMult
-                else:
-                    returnCrit[i, j] = correctionMult
+    def calculateCriterionMatrix(self, TilesImportance, MinimumImportance, MaximumImportance, correctionMult,
+                                 smallerthan0):
+        """
+        Generates a new correction multiplier matrix.
+        If self.importance is True: TilesImportance influence is calculated.
+        :param TilesImportance:
+        :param MinimumImportance:
+        :param MaximumImportance:
+        :param correctionMult:
+        :param smallerthan0:
+        :return: returnCrit
+        """
+        if self.importance:
+            if smallerthan0:
+                returnCrit = (TilesImportance - MinimumImportance) * (
+                        (correctionMult - 1) / (MaximumImportance - MinimumImportance)) + 1
+            else:
+                returnCrit = (TilesImportance - MinimumImportance) * (
+                        (1 - correctionMult) / (MaximumImportance - MinimumImportance)) + correctionMult
+        else:
+            returnCrit = np.full(TilesImportance.shape, correctionMult)
 
         return returnCrit
 
     def CalcConnectedMultiplier(self, dist1, dist2):
-        returnM = np.zeros((self.rows, self.cols))
-        MaxV = 0
-        MinV = sys.float_info.max
+        """
+        Calculates the ConnectedMultiplier between the binary robot tiles (connected area) and the binary non-robot tiles
+        :param dist1: Must contain the euclidean distances of all tiles around the binary robot tiles
+        :param dist2: Must contain the euclidean distances of all tiles around the binary non-robot tiles
+        :return: ConnectedMultiplier array in the shape of the whole area (dist1.shape & dist2.shape)
+        """
+        returnM = dist1 - dist2  # 2 numpy ndarray subtracted, shortform of np.subtract, returns a freshly allocated array
+        MaxV = np.max(returnM)
+        MinV = np.min(returnM)
 
-        for i in range(self.rows):
-            for j in range(self.cols):
-                returnM[i, j] = dist1[i, j] - dist2[i, j]
-                if MaxV < returnM[i, j]:
-                    MaxV = returnM[i, j]
-                if MinV > returnM[i, j]:
-                    MinV = returnM[i, j]
-
-        for i in range(self.rows):
-            for j in range(self.cols):
-                returnM[i, j] = (returnM[i, j]-MinV)*((2*self.CCvariation)/(MaxV - MinV)) + (1-self.CCvariation)
+        returnM = (returnM - MinV) * ((2 * self.CCvariation) / (MaxV - MinV)) + (1 - self.CCvariation)
 
         return returnM
 
-    def NormalizedEuclideanDistanceBinary(self, RobotR, BinaryRobot, BinaryNonRobot):
-        if RobotR:
-            distRobot = ndimage.morphology.distance_transform_edt(np.logical_not(BinaryRobot))
-        else:
-            distRobot = ndimage.morphology.distance_transform_edt(np.logical_not(BinaryNonRobot))
-
+    def NormalizedEuclideanDistanceBinary(self, RobotR, BinaryMap):
+        """
+        Calculates the euclidean distances of the tiles around a given binary(non-)robot map and normalizes it.
+        :param RobotR: True: given BinaryMap is area of tiles around the robot start point (BinaryRobot); False: if BinaryNonRobot tiles area and not background
+        :param BinaryMap: area of tiles as binary map
+        :return: Normalized distances map of the given binary (non-/)robot map in BinaryMap.shape
+        """
+        distRobot = ndimage.morphology.distance_transform_edt(np.logical_not(BinaryMap))
         MaxV = np.max(distRobot)
         MinV = np.min(distRobot)
 
-        #Normalization
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if RobotR:
-                    distRobot[i, j] = (distRobot[i, j] - MinV)*(1/(MaxV-MinV)) + 1
-                else:
-                    distRobot[i, j] = (distRobot[i, j] - MinV)*(1/(MaxV-MinV))
+        # Normalization
+        if RobotR:
+            distRobot = ((distRobot - MinV) / (MaxV - MinV)) + 1  # why range 1 to 2 and not 0 to 1?
+        else:
+            distRobot = ((distRobot - MinV) / (MaxV - MinV))  # range 0 to 1
 
         return distRobot
