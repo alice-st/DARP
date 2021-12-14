@@ -4,11 +4,8 @@ from kruskal import Kruskal
 from CalculateTrajectories import CalculateTrajectories
 from Visualization import visualize_paths
 import sys
-import random
-import argparse
 from turns import turns
-from pprint import pprint
-import io
+from PIL import Image
 
 
 class DARPinPoly(DARP):
@@ -17,24 +14,24 @@ class DARPinPoly(DARP):
 
         if not self.success:
             print("DARP did not manage to find a solution for the given configuration!")
-            sys.exit(0)
+            sys.exit(4)
 
         mode_to_drone_turns = dict()
 
         for mode in range(4):
-            MSTs = self.calculateMSTs(self.BinaryRobotRegions, self.droneNo, self.rows, self.cols, mode)
+            MSTs = self.calculateMSTs(self.BinaryRobotRegions, len(self.init_robot_pos), self.rows, self.cols, mode)
             AllRealPaths = []
-            for r in range(self.droneNo):
-                ct = CalculateTrajectories(self.rows, self.cols, MSTs[r])
-                ct.initializeGraph(self.CalcRealBinaryReg(self.BinaryRobotRegions[r], self.rows, self.cols), True)
+            for idx, robot in enumerate(self.init_robot_pos):
+                ct = CalculateTrajectories(self.rows, self.cols, MSTs[idx])
+                ct.initializeGraph(self.CalcRealBinaryReg(self.BinaryRobotRegions[idx], self.rows, self.cols), True)
                 ct.RemoveTheAppropriateEdges()
-                ct.CalculatePathsSequence(4 * self.init_robot_pos[r][0] * self.cols + 2 * self.init_robot_pos[r][1])
+                ct.CalculatePathsSequence(4 * robot[0] * self.cols + 2 * robot[1])
                 AllRealPaths.append(ct.PathSequence)
 
             TypesOfLines = np.zeros((self.rows*2, self.cols*2, 2))
-            for r in range(self.droneNo):
+            for idx, robot in enumerate(self.init_robot_pos):
                 flag = False
-                for connection in AllRealPaths[r]:
+                for connection in AllRealPaths[idx]:
                     if flag:
                         if TypesOfLines[connection[0]][connection[1]][0] == 0:
                             indxadd1 = 0
@@ -85,7 +82,7 @@ class DARPinPoly(DARP):
             mode_to_drone_turns[mode] = drone_turns
 
             if self.visualization:
-                image = visualize_paths(AllRealPaths, subCellsAssignment, self.droneNo, self.color)
+                image = visualize_paths(AllRealPaths, subCellsAssignment, len(self.init_robot_pos), self.color)
                 image.visualize_paths(mode)
 
         print("\nResults:\n")
@@ -107,102 +104,102 @@ class DARPinPoly(DARP):
 
     def calculateMSTs(self, BinaryRobotRegions, droneNo, rows, cols, mode):
         MSTs = []
-        for r in range(self.droneNo):
+        for idx, robot in enumerate(self.init_robot_pos):
             k = Kruskal(rows, cols)
-            k.initializeGraph(self.BinaryRobotRegions[r, :, :], True, mode)
+            k.initializeGraph(self.BinaryRobotRegions[idx, :, :], True, mode)
             k.performKruskal()
             MSTs.append(k.mst)
         return MSTs
 
 
+def get_area_map(path, area=0, obs=-1):
+    """
+    Creates an array from a given png-image(path).
+    :param path: path to the png-image
+    :param area: non-obstacles tiles value; standard is 0
+    :param obs: obstacle tiles value; standard is -1
+    :return: an array of area(0) and obstacle(-1) tiles
+    """
+    le_map = np.array(Image.open(path))
+    ma = np.array(le_map).mean(axis=2) != 0
+    le_map = np.int8(np.zeros(ma.shape))
+    le_map[ma] = area
+    le_map[~ma] = obs
+    return le_map
+
+
+def get_area_indices(area, value, inv=False, obstacle=-1):
+    """
+    Returns area tiles indices that have value
+    If inv(erted), returns indices that don't have value
+    :param area: array with value and obstacle tiles
+    :param value: searched tiles with value
+    :param inv: if True: search will be inverted and index of non-value tiles will get returned
+    :param obstacle: defines obstacle tiles
+    :return:
+    """
+    try:
+        value = int(value)
+        if inv:
+            return np.concatenate([np.where((area != value))]).T
+        return np.concatenate([np.where((area == value))]).T
+    except:
+        mask = area == value[0]
+        if inv:
+            mask = area != value[0]
+        for v in value[1:]:
+            if inv:
+                mask &= area != v
+            else:
+                mask |= area == v
+        mask &= area != obstacle
+        return np.concatenate([np.where(mask)]).T
+
+
 if __name__ == '__main__':
 
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '-grid',
-        default=(10, 10),
-        type=int,
-        nargs=2,
-        help='Dimensions of the Grid (default: (10, 10))')
-    argparser.add_argument(
-        '-obs_pos',
-        default=[],
-        nargs='*',
-        type=int,
-        help='Dimensions of the Grid (default: (10, 10))')
-    argparser.add_argument(
-        '-in_pos',
-        default=[1, 3, 9],
-        nargs='*',
-        type=int,
-        help='Initial Positions of the robots (default: (1, 3, 9))')
-    argparser.add_argument(
-        '-nep',
-        action='store_true',
-        help='Not Equal Portions shared between the Robots in the Grid (default: False)')
-    argparser.add_argument(
-        '-portions',
-        default=[0.2, 0.3, 0.5],
-        nargs='*',
-        type=float,
-        help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
-    argparser.add_argument(
-        '-vis',
-        action='store_true',
-        help='Visualize results (default: False)')
-    args = argparser.parse_args()
+    area_map = get_area_map("test_maps/comb_0_trans_obs.png")
+    obstacles_positions = get_area_indices(area_map, 0, True)
 
-    rows, cols = args.grid
+    rows, cols = area_map.shape
+    start_points = [(17, 1), (3, 26), (41, 21)]  # trust me, these points are inside the grid
 
-    obstacles_positions = []
-    initial_positions = []
+    not_equal_portions = True  # this trigger should be True, if the portions are not equal
 
-    for position in args.in_pos:
-        if position < 0 or position >= rows*cols:
-            print("Initial positions should be inside the Grid.")
-            sys.exit(2)
-        initial_positions.append((position // cols, position % cols))
-
-    for obstacle in args.obs_pos:
-        if obstacle < 0 or obstacle >= rows*cols:
-            print("Obstacles should be inside the Grid.")
-            sys.exit(3)
-        obstacles_positions.append((obstacle // cols, obstacle % cols))
-
-    portions = []
-    if args.nep:
-        for portion in args.portions:
-            portions.append(portion)
+    if not_equal_portions:
+        portions = [0.2, 0.7, 0.1]
     else:
-        for drone in range(len(initial_positions)):
-            portions.append(1/len(initial_positions))
+        portions = []
+        for idx, drone in enumerate(start_points):
+            portions.append(1 / len(start_points))
 
-    if len(initial_positions) != len(portions):
+    if len(start_points) != len(portions):
         print("Portions should be defined for each drone")
-        sys.exit(4)
+        sys.exit(1)
 
     s = sum(portions)
     if abs(s-1) >= 0.0001:
         print("Sum of portions should be equal to 1.")
-        sys.exit(1)
+        sys.exit(2)
 
-    for position in initial_positions:
+    for position in start_points:
         for obstacle in obstacles_positions:
             if position[0] == obstacle[0] and position[1] == obstacle[1]:
-                print("Initial positions should not be on obstacles")
+                print("Initial robot start position should not be on obstacle.")
+                print("Problems at following init position: " + str(obstacle))
                 sys.exit(3)
 
     MaxIter = 80000
     CCvariation = 0.01
     randomLevel = 0.0001
-    dcells = 2
+    dcells = 30
     importance = False
+    visualize = True
 
     print("\nInitial Conditions Defined:")
     print("Grid Dimensions:", rows, cols)
-    print("Robot Number:", len(initial_positions))
-    print("Initial Robots' positions", initial_positions)
+    print("Robot Number:", len(start_points))
+    print("Initial Robots' positions", start_points)
     print("Portions for each Robot:", portions, "\n")
 
-    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.nep, initial_positions, portions, obstacles_positions, args.vis)
+    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, not_equal_portions, start_points, portions, obstacles_positions, visualize)

@@ -1,8 +1,7 @@
 import sys
 import pygame
-from pygame.locals import KEYDOWN, K_q
+from pygame.locals import KEYDOWN, K_q, Rect
 import numpy as np
-import time
 
 # CONSTANTS:
 SCREENSIZE = WIDTH, HEIGHT = 800, 800
@@ -56,6 +55,7 @@ class visualize_paths():
         celldimX = celldimY = (self._VARS['gridWH']/self._VARS['gridCells']) - (cellBorder*2)
         for row in range(self.subCellsAssignment.shape[0]):
             for column in range(self.subCellsAssignment.shape[1]):
+                # draw obstacles
                 if (self.subCellsAssignment[column][row] == self.DroneNo):
                     self.drawSquareCell(
                         self._VARS['gridOrigin'][0] + (celldimY*row)
@@ -65,6 +65,7 @@ class visualize_paths():
                         celldimX, celldimY, BLACK)
                     continue
                 for r in range(self.DroneNo):
+                    # draw non obstacle fields
                     if(self.subCellsAssignment[column][row] == r):
                         self.drawSquareCell(
                             self._VARS['gridOrigin'][0] + (celldimY*row)
@@ -162,7 +163,7 @@ class visualize_paths():
 
 
 class darp_area_visualization(object):
-    def __init__(self, Assignment_matrix, DroneNo, color):
+    def __init__(self, Assignment_matrix, DroneNo, color, init_robot_pos):
         self.Assignment_matrix = Assignment_matrix
         self.DroneNo = DroneNo
         self._VARS = {'surf': False,
@@ -171,16 +172,18 @@ class darp_area_visualization(object):
                       'gridCells': self.Assignment_matrix.shape[0],
                       'lineWidth': 2}
         self.color = color
+        self.init_robot_pos_colors = [np.clip((r[0]-30, r[1]+10, r[2]-30), 0, 255).tolist() for r in self.color]
+        self.init_robot_pos = init_robot_pos
         pygame.init()
         self._VARS['surf'] = pygame.display.set_mode(SCREENSIZE)
         self.checkEvents()
         self._VARS['surf'].fill(GREY)
         self.drawSquareGrid(
          self._VARS['gridOrigin'], self._VARS['gridWH'], self._VARS['gridCells'])
-        self.placeCells(self.Assignment_matrix)
+        self.placeCells()
         pygame.display.set_caption('Assignment Matrix')
         pygame.display.update()
-        # time.sleep(5)
+        #  time.sleep(1)
 
     def checkEvents(self):
         for event in pygame.event.get():
@@ -233,32 +236,43 @@ class darp_area_visualization(object):
               (cont_x, cont_y + (cellSize*x)),
               (cont_x + CONTAINER_WIDTH_HEIGHT, cont_y + (cellSize*x)), 2)
 
-    def placeCells(self, Assignment_matrix):
+    def placeCells(self, iteration_number=0):
         cellBorder = 1
         celldimX = celldimY = (self._VARS['gridWH']/self._VARS['gridCells']) - (cellBorder*2)
         for row in range(self.Assignment_matrix.shape[0]):
             for column in range(self.Assignment_matrix.shape[1]):
-                if (self.Assignment_matrix[column][row] == self.DroneNo):
+                if self.Assignment_matrix[row][column] == self.DroneNo:
                     self.drawSquareCell(
-                        self._VARS['gridOrigin'][0] + (celldimY*row)
+                        self._VARS['gridOrigin'][0] + (celldimX*row)
                         + cellBorder + (2*row*cellBorder) + self._VARS['lineWidth']/2,
-                        self._VARS['gridOrigin'][1] + (celldimX*column)
+                        self._VARS['gridOrigin'][1] + (celldimY*column)
                         + cellBorder + (2*column*cellBorder) + self._VARS['lineWidth']/2,
                         celldimX, celldimY, BLACK)
                     continue
                 for r in range(self.DroneNo):
-                    if(self.Assignment_matrix[column][row] == r):
+                    if self.Assignment_matrix[row][column] == r:
+                        try:
+                            if self.init_robot_pos.index((row, column)) == r:
+                                self.drawSquareCell(
+                                    self._VARS['gridOrigin'][0] + (celldimX * row)
+                                    + cellBorder + (2 * row * cellBorder) + self._VARS['lineWidth'] / 2,
+                                    self._VARS['gridOrigin'][1] + (celldimY * column)
+                                    + cellBorder + (2 * column * cellBorder) + self._VARS['lineWidth'] / 2,
+                                    celldimX, celldimY, self.init_robot_pos_colors[r])
+                                break
+                        except ValueError:
+                            pass
+
                         self.drawSquareCell(
-                            self._VARS['gridOrigin'][0] + (celldimY*row)
+                            self._VARS['gridOrigin'][0] + (celldimX*row)
                             + cellBorder + (2*row*cellBorder) + self._VARS['lineWidth']/2,
-                            self._VARS['gridOrigin'][1] + (celldimX*column)
+                            self._VARS['gridOrigin'][1] + (celldimY*column)
                             + cellBorder + (2*column*cellBorder) + self._VARS['lineWidth']/2,
                             celldimX, celldimY, self.color[r])
-
+                        break
+        pygame.display.set_caption('Assignment Matrix [Iteration: ' + str(iteration_number) + ']')
         pygame.display.update()
 
-    def drawSquareCell(self, x, y, dimX, dimY, color):
-        pygame.draw.rect(
-         self._VARS['surf'], color,
-         (x, y, dimX, dimY)
-        )
+    def drawSquareCell(self, left, top, width, height, color):
+        rect = Rect(top, left, width, height)  # rotated Rect top and left - PyGame x "axis" points to the right, y down
+        pygame.draw.rect(self._VARS['surf'], color, rect)
