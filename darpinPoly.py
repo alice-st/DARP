@@ -158,16 +158,16 @@ def get_area_indices(area, value, inv=False, obstacle=-1):
 
 if __name__ == '__main__':
 
-    area_map = get_area_map("test_maps/comb_0_trans_obs.png")
+    area_map = get_area_map("test_maps/caves_0_transp_obs.png")
     obstacles_positions = get_area_indices(area_map, 0, True)
 
     rows, cols = area_map.shape
-    start_points = [(17, 1), (3, 26), (41, 21)]  # trust me, these points are inside the grid
+    start_points = [(17, 1), (5, 28), (27, 21)]  # trust me, these points are inside the grid
 
     not_equal_portions = True  # this trigger should be True, if the portions are not equal
 
     if not_equal_portions:
-        portions = [0.2, 0.7, 0.1]
+        portions = [0.4, 0.3, 0.3]
     else:
         portions = []
         for idx, drone in enumerate(start_points):

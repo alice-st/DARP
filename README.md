@@ -4,6 +4,20 @@ This is a fork of the https://github.com/alice-st/DARP DARP-Algorithm python pro
 
 Look up the original project for further details, how the algorithm works and all links.
 
+## Example area division and pathfinding
+
+* start_point 1 (17, 1) - 40% map area (portion 0.4)
+* start_point 2 (5, 28) - 30%
+* start_point 3 (27, 21) - 30%
+
+Effective number of tiles: 722
+
+Final assignment matrix (228 iterations, tiles per robot [289. 217. 216.])
+
+<p align="center">
+  <img src="cave_map_animation.gif">
+</p>
+
 ## Important Changes
 I recommend using an IDE like PyCharm to work with this python program.
 

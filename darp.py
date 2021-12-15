@@ -292,7 +292,7 @@ class DARP:
     def construct_Assignment_Matrix(self):
         Notiles = self.rows * self.cols
         self.effectiveSize = Notiles - len(self.init_robot_pos) - self.ob
-        print("Effective Size of Tiles: " + str(self.effectiveSize))
+        print("Effective number of tiles: " + str(self.effectiveSize))
         termThr = 0
 
         if self.effectiveSize % len(self.init_robot_pos) != 0:

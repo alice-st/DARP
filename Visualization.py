@@ -172,7 +172,7 @@ class darp_area_visualization(object):
                       'gridCells': self.Assignment_matrix.shape[0],
                       'lineWidth': 2}
         self.color = color
-        self.init_robot_pos_colors = [np.clip((r[0]-30, r[1]+10, r[2]-30), 0, 255).tolist() for r in self.color]
+        self.init_robot_pos_colors = [np.clip((r[0]-30, r[1]-30, r[2]-30), 0, 255).tolist() for r in self.color]
         self.init_robot_pos = init_robot_pos
         pygame.init()
         self._VARS['surf'] = pygame.display.set_mode(SCREENSIZE)
