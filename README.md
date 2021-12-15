@@ -14,9 +14,7 @@ Effective number of tiles: 722
 
 Final assignment matrix (228 iterations, tiles per robot [289. 217. 216.])
 
-<p align="center">
-  <img width="550" height="550" src="cave_map_animation.gif">
-</p>
+![](cave_map_animation.gif)
 
 ## Important Changes
 I recommend using an IDE like PyCharm to work with this python program.
