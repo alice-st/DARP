@@ -10,4 +10,6 @@ source $1/bin/activate
 pip install \
 	opencv-python \
 	pygame \
-	scipy
+	scipy \
+	jupyter==1.0.0 \
+  numba

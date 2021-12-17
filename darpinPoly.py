@@ -4,35 +4,36 @@ from kruskal import Kruskal
 from CalculateTrajectories import CalculateTrajectories
 from Visualization import visualize_paths
 import sys
-import random
 import argparse
 from turns import turns
-from pprint import pprint
-import io
-
 
 class DARPinPoly(DARP):
-    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
-        DARP.__init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization)
+    def __init__(self, nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
+                 MaxIter=80000, CCvariation=0.01, randomLevel=0.0001, dcells=2, importance=False):
 
-        if not self.success:
+        darp_instance = DARP(nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
+                      MaxIter=MaxIter, CCvariation=CCvariation, randomLevel=randomLevel, dcells=dcells, importance=importance)
+
+        success = darp_instance.findTrajectories()
+
+        if not success:
             print("DARP did not manage to find a solution for the given configuration!")
             sys.exit(0)
 
         mode_to_drone_turns = dict()
 
         for mode in range(4):
-            MSTs = self.calculateMSTs(self.BinaryRobotRegions, self.droneNo, self.rows, self.cols, mode)
+            MSTs = self.calculateMSTs(darp_instance.BinaryRobotRegions, darp_instance.droneNo, darp_instance.rows, darp_instance.cols, mode)
             AllRealPaths = []
-            for r in range(self.droneNo):
-                ct = CalculateTrajectories(self.rows, self.cols, MSTs[r])
-                ct.initializeGraph(self.CalcRealBinaryReg(self.BinaryRobotRegions[r], self.rows, self.cols), True)
+            for r in range(darp_instance.droneNo):
+                ct = CalculateTrajectories(darp_instance.rows, darp_instance.cols, MSTs[r])
+                ct.initializeGraph(self.CalcRealBinaryReg(darp_instance.BinaryRobotRegions[r], darp_instance.rows, darp_instance.cols), True)
                 ct.RemoveTheAppropriateEdges()
-                ct.CalculatePathsSequence(4 * self.init_robot_pos[r][0] * self.cols + 2 * self.init_robot_pos[r][1])
+                ct.CalculatePathsSequence(4 * darp_instance.init_robot_pos[r][0] * darp_instance.cols + 2 * darp_instance.init_robot_pos[r][1])
                 AllRealPaths.append(ct.PathSequence)
 
-            TypesOfLines = np.zeros((self.rows*2, self.cols*2, 2))
-            for r in range(self.droneNo):
+            TypesOfLines = np.zeros((darp_instance.rows*2, darp_instance.cols*2, 2))
+            for r in range(darp_instance.droneNo):
                 flag = False
                 for connection in AllRealPaths[r]:
                     if flag:
@@ -72,20 +73,20 @@ class DARPinPoly(DARP):
                             TypesOfLines[connection[0]][connection[1]][indxadd1] = 4
                             TypesOfLines[connection[2]][connection[3]][indxadd2] = 1
 
-            subCellsAssignment = np.zeros((2*self.rows, 2*self.cols))
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    subCellsAssignment[2 * i][2 * j] = self.A[i][j]
-                    subCellsAssignment[2 * i + 1][2 * j] = self.A[i][j]
-                    subCellsAssignment[2 * i][2 * j + 1] = self.A[i][j]
-                    subCellsAssignment[2 * i + 1][2 * j + 1] = self.A[i][j]
+            subCellsAssignment = np.zeros((2*darp_instance.rows, 2*darp_instance.cols))
+            for i in range(darp_instance.rows):
+                for j in range(darp_instance.cols):
+                    subCellsAssignment[2 * i][2 * j] = darp_instance.A[i][j]
+                    subCellsAssignment[2 * i + 1][2 * j] = darp_instance.A[i][j]
+                    subCellsAssignment[2 * i][2 * j + 1] = darp_instance.A[i][j]
+                    subCellsAssignment[2 * i + 1][2 * j + 1] = darp_instance.A[i][j]
 
             drone_turns = turns(AllRealPaths)
             drone_turns.count_turns()
             mode_to_drone_turns[mode] = drone_turns
 
-            if self.visualization:
-                image = visualize_paths(AllRealPaths, subCellsAssignment, self.droneNo, self.color)
+            if darp_instance.visualization:
+                image = visualize_paths(AllRealPaths, subCellsAssignment, darp_instance.droneNo, darp_instance.color)
                 image.visualize_paths(mode)
 
         print("\nResults:\n")
@@ -107,9 +108,9 @@ class DARPinPoly(DARP):
 
     def calculateMSTs(self, BinaryRobotRegions, droneNo, rows, cols, mode):
         MSTs = []
-        for r in range(self.droneNo):
+        for r in range(droneNo):
             k = Kruskal(rows, cols)
-            k.initializeGraph(self.BinaryRobotRegions[r, :, :], True, mode)
+            k.initializeGraph(BinaryRobotRegions[r, :, :], True, mode)
             k.performKruskal()
             MSTs.append(k.mst)
         return MSTs
@@ -154,55 +155,4 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
     rows, cols = args.grid
-
-    obstacles_positions = []
-    initial_positions = []
-
-    for position in args.in_pos:
-        if position < 0 or position >= rows*cols:
-            print("Initial positions should be inside the Grid.")
-            sys.exit(2)
-        initial_positions.append((position // cols, position % cols))
-
-    for obstacle in args.obs_pos:
-        if obstacle < 0 or obstacle >= rows*cols:
-            print("Obstacles should be inside the Grid.")
-            sys.exit(3)
-        obstacles_positions.append((obstacle // cols, obstacle % cols))
-
-    portions = []
-    if args.nep:
-        for portion in args.portions:
-            portions.append(portion)
-    else:
-        for drone in range(len(initial_positions)):
-            portions.append(1/len(initial_positions))
-
-    if len(initial_positions) != len(portions):
-        print("Portions should be defined for each drone")
-        sys.exit(4)
-
-    s = sum(portions)
-    if abs(s-1) >= 0.0001:
-        print("Sum of portions should be equal to 1.")
-        sys.exit(1)
-
-    for position in initial_positions:
-        for obstacle in obstacles_positions:
-            if position[0] == obstacle[0] and position[1] == obstacle[1]:
-                print("Initial positions should not be on obstacles")
-                sys.exit(3)
-
-    MaxIter = 80000
-    CCvariation = 0.01
-    randomLevel = 0.0001
-    dcells = 2
-    importance = False
-
-    print("\nInitial Conditions Defined:")
-    print("Grid Dimensions:", rows, cols)
-    print("Robot Number:", len(initial_positions))
-    print("Initial Robots' positions", initial_positions)
-    print("Portions for each Robot:", portions, "\n")
-
-    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.nep, initial_positions, portions, obstacles_positions, args.vis)
+    poly = DARPinPoly(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)

@@ -74,7 +74,56 @@ def CalcConnectedMultiplier(rows,cols, dist1, dist2,CCvariation):
 
         return returnM
 class DARP():
-    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
+    def __init__(self, nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
+                 MaxIter=80000, CCvariation=0.01, randomLevel=0.0001, dcells=2, importance=False):
+
+        obstacles_positions = []
+        initial_positions = []
+        for position in pos:
+            if position < 0 or position >= nx * ny:
+                print("Initial positions should be inside the Grid.")
+                sys.exit(2)
+            initial_positions.append((position // ny, position % ny))
+
+        for obstacle in obs_pos:
+            if obstacle < 0 or obstacle >= nx * ny:
+                print("Obstacles should be inside the Grid.")
+                sys.exit(3)
+            obstacles_positions.append((obstacle // ny, obstacle % ny))
+
+        portions_new = []
+        if notEqualPortions:
+            for portion in portions:
+                portions_new.append(portion)
+        else:
+            for drone in range(len(initial_positions)):
+                portions_new.append(1 / len(initial_positions))
+
+        portions = portions_new
+
+        if len(initial_positions) != len(portions):
+            print("Portions should be defined for each drone")
+            sys.exit(4)
+
+        s = sum(portions)
+        if abs(s - 1) >= 0.0001:
+            print("Sum of portions should be equal to 1.")
+            sys.exit(1)
+
+        for position in initial_positions:
+            for obstacle in obstacles_positions:
+                if position[0] == obstacle[0] and position[1] == obstacle[1]:
+                    print("Initial positions should not be on obstacles")
+                    sys.exit(3)
+
+        print("\nInitial Conditions Defined:")
+        print("Grid Dimensions:", nx, ny)
+        print("Robot Number:", len(initial_positions))
+        print("Initial Robots' positions", initial_positions)
+        print("Portions for each Robot:", portions, "\n")
+
+
+
         self.rows = nx
         self.cols = ny
         self.visualization = visualization
@@ -139,8 +188,6 @@ class DARP():
         if self.visualization:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
 
-        self.success = self.update()
-
     def defineRobotsObstacles(self):
         for i in range(self.rows):
             for j in range(self.cols):
@@ -155,7 +202,7 @@ class DARP():
                 else:
                     self.GridEnv[i, j] = -1
 
-    def update(self):
+    def findTrajectories(self):
         success = False
         cancelled = False
         criterionMatrix = np.zeros((self.rows, self.cols))
