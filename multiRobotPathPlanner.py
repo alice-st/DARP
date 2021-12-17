@@ -1,3 +1,5 @@
+import pickle
+
 from darp import DARP
 import numpy as np
 from kruskal import Kruskal
@@ -12,11 +14,11 @@ class MultiRobotPathPlanner(DARP):
                  MaxIter=80000, CCvariation=0.01, randomLevel=0.0001, dcells=2, importance=False):
 
         # Initialize DARP
-        darp_instance = DARP(nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
+        self.darp_instance = DARP(nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
                       MaxIter=MaxIter, CCvariation=CCvariation, randomLevel=randomLevel, dcells=dcells, importance=importance)
 
         # Divide areas based on robots initial positions
-        success = darp_instance.divideRegions()
+        success = self.darp_instance.divideRegions()
 
         # Check if solution was found
         if not success:
@@ -28,17 +30,17 @@ class MultiRobotPathPlanner(DARP):
         AllRealPaths_dict = {}
         subCellsAssignment_dict = {}
         for mode in range(4):
-            MSTs = self.calculateMSTs(darp_instance.BinaryRobotRegions, darp_instance.droneNo, darp_instance.rows, darp_instance.cols, mode)
+            MSTs = self.calculateMSTs(self.darp_instance.BinaryRobotRegions, self.darp_instance.droneNo, self.darp_instance.rows, self.darp_instance.cols, mode)
             AllRealPaths = []
-            for r in range(darp_instance.droneNo):
-                ct = CalculateTrajectories(darp_instance.rows, darp_instance.cols, MSTs[r])
-                ct.initializeGraph(self.CalcRealBinaryReg(darp_instance.BinaryRobotRegions[r], darp_instance.rows, darp_instance.cols), True)
+            for r in range(self.darp_instance.droneNo):
+                ct = CalculateTrajectories(self.darp_instance.rows, self.darp_instance.cols, MSTs[r])
+                ct.initializeGraph(self.CalcRealBinaryReg(self.darp_instance.BinaryRobotRegions[r], self.darp_instance.rows, self.darp_instance.cols), True)
                 ct.RemoveTheAppropriateEdges()
-                ct.CalculatePathsSequence(4 * darp_instance.init_robot_pos[r][0] * darp_instance.cols + 2 * darp_instance.init_robot_pos[r][1])
+                ct.CalculatePathsSequence(4 * self.darp_instance.init_robot_pos[r][0] * self.darp_instance.cols + 2 * self.darp_instance.init_robot_pos[r][1])
                 AllRealPaths.append(ct.PathSequence)
 
-            TypesOfLines = np.zeros((darp_instance.rows*2, darp_instance.cols*2, 2))
-            for r in range(darp_instance.droneNo):
+            TypesOfLines = np.zeros((self.darp_instance.rows*2, self.darp_instance.cols*2, 2))
+            for r in range(self.darp_instance.droneNo):
                 flag = False
                 for connection in AllRealPaths[r]:
                     if flag:
@@ -78,13 +80,13 @@ class MultiRobotPathPlanner(DARP):
                             TypesOfLines[connection[0]][connection[1]][indxadd1] = 4
                             TypesOfLines[connection[2]][connection[3]][indxadd2] = 1
 
-            subCellsAssignment = np.zeros((2*darp_instance.rows, 2*darp_instance.cols))
-            for i in range(darp_instance.rows):
-                for j in range(darp_instance.cols):
-                    subCellsAssignment[2 * i][2 * j] = darp_instance.A[i][j]
-                    subCellsAssignment[2 * i + 1][2 * j] = darp_instance.A[i][j]
-                    subCellsAssignment[2 * i][2 * j + 1] = darp_instance.A[i][j]
-                    subCellsAssignment[2 * i + 1][2 * j + 1] = darp_instance.A[i][j]
+            subCellsAssignment = np.zeros((2*self.darp_instance.rows, 2*self.darp_instance.cols))
+            for i in range(self.darp_instance.rows):
+                for j in range(self.darp_instance.cols):
+                    subCellsAssignment[2 * i][2 * j] = self.darp_instance.A[i][j]
+                    subCellsAssignment[2 * i + 1][2 * j] = self.darp_instance.A[i][j]
+                    subCellsAssignment[2 * i][2 * j + 1] = self.darp_instance.A[i][j]
+                    subCellsAssignment[2 * i + 1][2 * j + 1] = self.darp_instance.A[i][j]
 
             drone_turns = turns(AllRealPaths)
             drone_turns.count_turns()
@@ -98,13 +100,18 @@ class MultiRobotPathPlanner(DARP):
         averge_turns = [x.avg for x in mode_to_drone_turns]
         min_mode = averge_turns.index(min(averge_turns))
 
-        if darp_instance.visualization:
+        if self.darp_instance.visualization:
             image = visualize_paths(AllRealPaths_dict[min_mode], subCellsAssignment_dict[min_mode],
-                                    darp_instance.droneNo, darp_instance.color)
+                                    self.darp_instance.droneNo, self.darp_instance.color)
             image.visualize_paths(min_mode)
 
         # Retrieve number of cells per robot for the configuration with the smaller number of turns
         num_paths = [len(x) for x in AllRealPaths_dict[min_mode]]
+
+        self.returnPaths = AllRealPaths_dict[min_mode]
+
+        #with open('unitTests/test1_returnPaths.pickle', 'wb') as handle:
+        #    pickle.dump(self.returnPaths, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print(f'\nResults:')
         print(f'Number of cells per robot: {num_paths}')
