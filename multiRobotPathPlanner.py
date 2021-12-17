@@ -99,7 +99,8 @@ class MultiRobotPathPlanner(DARP):
         min_mode = averge_turns.index(min(averge_turns))
 
         if darp_instance.visualization:
-            image = visualize_paths(AllRealPaths_dict[min_mode], subCellsAssignment_dict[min_mode], darp_instance.droneNo, darp_instance.color)
+            image = visualize_paths(AllRealPaths_dict[min_mode], subCellsAssignment_dict[min_mode],
+                                    darp_instance.droneNo, darp_instance.color)
             image.visualize_paths(min_mode)
 
         # Retrieve number of cells per robot for the configuration with the smaller number of turns
@@ -176,4 +177,4 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
     rows, cols = args.grid
-    poly = MultiRobotPathPlanner(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)
+    MultiRobotPathPlanner(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)
