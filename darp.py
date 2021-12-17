@@ -202,7 +202,7 @@ class DARP():
                 else:
                     self.GridEnv[i, j] = -1
 
-    def findTrajectories(self):
+    def divideRegions(self):
         success = False
         cancelled = False
         criterionMatrix = np.zeros((self.rows, self.cols))

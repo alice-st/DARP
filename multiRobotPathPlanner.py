@@ -7,21 +7,26 @@ import sys
 import argparse
 from turns import turns
 
-class DARPinPoly(DARP):
+class MultiRobotPathPlanner(DARP):
     def __init__(self, nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
                  MaxIter=80000, CCvariation=0.01, randomLevel=0.0001, dcells=2, importance=False):
 
+        # Initialize DARP
         darp_instance = DARP(nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
                       MaxIter=MaxIter, CCvariation=CCvariation, randomLevel=randomLevel, dcells=dcells, importance=importance)
 
-        success = darp_instance.findTrajectories()
+        # Divide areas based on robots initial positions
+        success = darp_instance.divideRegions()
 
+        # Check if solution was found
         if not success:
             print("DARP did not manage to find a solution for the given configuration!")
             sys.exit(0)
 
-        mode_to_drone_turns = dict()
-
+        # Iterate for 4 different ways to join edges in MST
+        mode_to_drone_turns = []
+        AllRealPaths_dict = {}
+        subCellsAssignment_dict = {}
         for mode in range(4):
             MSTs = self.calculateMSTs(darp_instance.BinaryRobotRegions, darp_instance.droneNo, darp_instance.rows, darp_instance.cols, mode)
             AllRealPaths = []
@@ -83,15 +88,30 @@ class DARPinPoly(DARP):
 
             drone_turns = turns(AllRealPaths)
             drone_turns.count_turns()
-            mode_to_drone_turns[mode] = drone_turns
+            mode_to_drone_turns.append(drone_turns)
 
-            if darp_instance.visualization:
-                image = visualize_paths(AllRealPaths, subCellsAssignment, darp_instance.droneNo, darp_instance.color)
-                image.visualize_paths(mode)
+            AllRealPaths_dict[mode] = AllRealPaths
+            subCellsAssignment_dict[mode] = subCellsAssignment
 
-        print("\nResults:\n")
-        for mode, val in mode_to_drone_turns.items():
-            print(mode, val)
+
+        # Find mode with the smaller number of turns
+        averge_turns = [x.avg for x in mode_to_drone_turns]
+        min_mode = averge_turns.index(min(averge_turns))
+
+        if darp_instance.visualization:
+            image = visualize_paths(AllRealPaths_dict[min_mode], subCellsAssignment_dict[min_mode], darp_instance.droneNo, darp_instance.color)
+            image.visualize_paths(min_mode)
+
+        # Retrieve number of cells per robot for the configuration with the smaller number of turns
+        num_paths = [len(x) for x in AllRealPaths_dict[min_mode]]
+
+        print(f'\nResults:')
+        print(f'Number of cells per robot: {num_paths}')
+        print(f'Minimum number of cells in robots paths: {min(num_paths)}')
+        print(f'Max number of cells in robots paths: {max(num_paths)}')
+        print(f'Average number of cells in robots paths: {np.mean(np.array(num_paths))}')
+        print(f'\nTurns Analysis: {mode_to_drone_turns[min_mode]}')
+
 
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
@@ -131,7 +151,7 @@ if __name__ == '__main__':
         default=[],
         nargs='*',
         type=int,
-        help='Dimensions of the Grid (default: (10, 10))')
+        help='Obstacles Positions (default: None)')
     argparser.add_argument(
         '-in_pos',
         default=[1, 3, 9],
@@ -150,9 +170,10 @@ if __name__ == '__main__':
         help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
     argparser.add_argument(
         '-vis',
+        default=True,
         action='store_true',
         help='Visualize results (default: False)')
     args = argparser.parse_args()
 
     rows, cols = args.grid
-    poly = DARPinPoly(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)
+    poly = MultiRobotPathPlanner(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)
