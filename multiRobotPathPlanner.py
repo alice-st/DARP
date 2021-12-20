@@ -1,38 +1,46 @@
+import pickle
+
 from darp import DARP
 import numpy as np
 from kruskal import Kruskal
 from CalculateTrajectories import CalculateTrajectories
 from Visualization import visualize_paths
 import sys
-import random
 import argparse
 from turns import turns
-from pprint import pprint
-import io
 
+class MultiRobotPathPlanner(DARP):
+    def __init__(self, nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
+                 MaxIter=80000, CCvariation=0.01, randomLevel=0.0001, dcells=2, importance=False):
 
-class DARPinPoly(DARP):
-    def __init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization):
-        DARP.__init__(self, nx, ny, MaxIter, CCvariation, randomLevel, dcells, importance, notEqualPortions, initial_positions, portions, obstacles_positions, visualization)
+        # Initialize DARP
+        self.darp_instance = DARP(nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
+                      MaxIter=MaxIter, CCvariation=CCvariation, randomLevel=randomLevel, dcells=dcells, importance=importance)
 
-        if not self.success:
+        # Divide areas based on robots initial positions
+        success = self.darp_instance.divideRegions()
+
+        # Check if solution was found
+        if not success:
             print("DARP did not manage to find a solution for the given configuration!")
             sys.exit(0)
 
-        mode_to_drone_turns = dict()
-
+        # Iterate for 4 different ways to join edges in MST
+        mode_to_drone_turns = []
+        AllRealPaths_dict = {}
+        subCellsAssignment_dict = {}
         for mode in range(4):
-            MSTs = self.calculateMSTs(self.BinaryRobotRegions, self.droneNo, self.rows, self.cols, mode)
+            MSTs = self.calculateMSTs(self.darp_instance.BinaryRobotRegions, self.darp_instance.droneNo, self.darp_instance.rows, self.darp_instance.cols, mode)
             AllRealPaths = []
-            for r in range(self.droneNo):
-                ct = CalculateTrajectories(self.rows, self.cols, MSTs[r])
-                ct.initializeGraph(self.CalcRealBinaryReg(self.BinaryRobotRegions[r], self.rows, self.cols), True)
+            for r in range(self.darp_instance.droneNo):
+                ct = CalculateTrajectories(self.darp_instance.rows, self.darp_instance.cols, MSTs[r])
+                ct.initializeGraph(self.CalcRealBinaryReg(self.darp_instance.BinaryRobotRegions[r], self.darp_instance.rows, self.darp_instance.cols), True)
                 ct.RemoveTheAppropriateEdges()
-                ct.CalculatePathsSequence(4 * self.init_robot_pos[r][0] * self.cols + 2 * self.init_robot_pos[r][1])
+                ct.CalculatePathsSequence(4 * self.darp_instance.init_robot_pos[r][0] * self.darp_instance.cols + 2 * self.darp_instance.init_robot_pos[r][1])
                 AllRealPaths.append(ct.PathSequence)
 
-            TypesOfLines = np.zeros((self.rows*2, self.cols*2, 2))
-            for r in range(self.droneNo):
+            TypesOfLines = np.zeros((self.darp_instance.rows*2, self.darp_instance.cols*2, 2))
+            for r in range(self.darp_instance.droneNo):
                 flag = False
                 for connection in AllRealPaths[r]:
                     if flag:
@@ -72,25 +80,46 @@ class DARPinPoly(DARP):
                             TypesOfLines[connection[0]][connection[1]][indxadd1] = 4
                             TypesOfLines[connection[2]][connection[3]][indxadd2] = 1
 
-            subCellsAssignment = np.zeros((2*self.rows, 2*self.cols))
-            for i in range(self.rows):
-                for j in range(self.cols):
-                    subCellsAssignment[2 * i][2 * j] = self.A[i][j]
-                    subCellsAssignment[2 * i + 1][2 * j] = self.A[i][j]
-                    subCellsAssignment[2 * i][2 * j + 1] = self.A[i][j]
-                    subCellsAssignment[2 * i + 1][2 * j + 1] = self.A[i][j]
+            subCellsAssignment = np.zeros((2*self.darp_instance.rows, 2*self.darp_instance.cols))
+            for i in range(self.darp_instance.rows):
+                for j in range(self.darp_instance.cols):
+                    subCellsAssignment[2 * i][2 * j] = self.darp_instance.A[i][j]
+                    subCellsAssignment[2 * i + 1][2 * j] = self.darp_instance.A[i][j]
+                    subCellsAssignment[2 * i][2 * j + 1] = self.darp_instance.A[i][j]
+                    subCellsAssignment[2 * i + 1][2 * j + 1] = self.darp_instance.A[i][j]
 
             drone_turns = turns(AllRealPaths)
             drone_turns.count_turns()
-            mode_to_drone_turns[mode] = drone_turns
+            mode_to_drone_turns.append(drone_turns)
 
-            if self.visualization:
-                image = visualize_paths(AllRealPaths, subCellsAssignment, self.droneNo, self.color)
-                image.visualize_paths(mode)
+            AllRealPaths_dict[mode] = AllRealPaths
+            subCellsAssignment_dict[mode] = subCellsAssignment
 
-        print("\nResults:\n")
-        for mode, val in mode_to_drone_turns.items():
-            print(mode, val)
+
+        # Find mode with the smaller number of turns
+        averge_turns = [x.avg for x in mode_to_drone_turns]
+        min_mode = averge_turns.index(min(averge_turns))
+
+        if self.darp_instance.visualization:
+            image = visualize_paths(AllRealPaths_dict[min_mode], subCellsAssignment_dict[min_mode],
+                                    self.darp_instance.droneNo, self.darp_instance.color)
+            image.visualize_paths(min_mode)
+
+        # Retrieve number of cells per robot for the configuration with the smaller number of turns
+        num_paths = [len(x) for x in AllRealPaths_dict[min_mode]]
+
+        self.returnPaths = AllRealPaths_dict[min_mode]
+
+        #with open('unitTests/test1_returnPaths.pickle', 'wb') as handle:
+        #    pickle.dump(self.returnPaths, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+        print(f'\nResults:')
+        print(f'Number of cells per robot: {num_paths}')
+        print(f'Minimum number of cells in robots paths: {min(num_paths)}')
+        print(f'Max number of cells in robots paths: {max(num_paths)}')
+        print(f'Average number of cells in robots paths: {np.mean(np.array(num_paths))}')
+        print(f'\nTurns Analysis: {mode_to_drone_turns[min_mode]}')
+
 
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
@@ -107,9 +136,9 @@ class DARPinPoly(DARP):
 
     def calculateMSTs(self, BinaryRobotRegions, droneNo, rows, cols, mode):
         MSTs = []
-        for r in range(self.droneNo):
+        for r in range(droneNo):
             k = Kruskal(rows, cols)
-            k.initializeGraph(self.BinaryRobotRegions[r, :, :], True, mode)
+            k.initializeGraph(BinaryRobotRegions[r, :, :], True, mode)
             k.performKruskal()
             MSTs.append(k.mst)
         return MSTs
@@ -130,7 +159,7 @@ if __name__ == '__main__':
         default=[],
         nargs='*',
         type=int,
-        help='Dimensions of the Grid (default: (10, 10))')
+        help='Obstacles Positions (default: None)')
     argparser.add_argument(
         '-in_pos',
         default=[1, 3, 9],
@@ -149,60 +178,10 @@ if __name__ == '__main__':
         help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
     argparser.add_argument(
         '-vis',
+        default=True,
         action='store_true',
         help='Visualize results (default: False)')
     args = argparser.parse_args()
 
     rows, cols = args.grid
-
-    obstacles_positions = []
-    initial_positions = []
-
-    for position in args.in_pos:
-        if position < 0 or position >= rows*cols:
-            print("Initial positions should be inside the Grid.")
-            sys.exit(2)
-        initial_positions.append((position // cols, position % cols))
-
-    for obstacle in args.obs_pos:
-        if obstacle < 0 or obstacle >= rows*cols:
-            print("Obstacles should be inside the Grid.")
-            sys.exit(3)
-        obstacles_positions.append((obstacle // cols, obstacle % cols))
-
-    portions = []
-    if args.nep:
-        for portion in args.portions:
-            portions.append(portion)
-    else:
-        for drone in range(len(initial_positions)):
-            portions.append(1/len(initial_positions))
-
-    if len(initial_positions) != len(portions):
-        print("Portions should be defined for each drone")
-        sys.exit(4)
-
-    s = sum(portions)
-    if abs(s-1) >= 0.0001:
-        print("Sum of portions should be equal to 1.")
-        sys.exit(1)
-
-    for position in initial_positions:
-        for obstacle in obstacles_positions:
-            if position[0] == obstacle[0] and position[1] == obstacle[1]:
-                print("Initial positions should not be on obstacles")
-                sys.exit(3)
-
-    MaxIter = 80000
-    CCvariation = 0.01
-    randomLevel = 0.0001
-    dcells = 2
-    importance = False
-
-    print("\nInitial Conditions Defined:")
-    print("Grid Dimensions:", rows, cols)
-    print("Robot Number:", len(initial_positions))
-    print("Initial Robots' positions", initial_positions)
-    print("Portions for each Robot:", portions, "\n")
-
-    poly = DARPinPoly(rows, cols, MaxIter, CCvariation, randomLevel, dcells, importance, args.nep, initial_positions, portions, obstacles_positions, args.vis)
+    MultiRobotPathPlanner(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)
