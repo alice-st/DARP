@@ -9,13 +9,17 @@ import sys
 import argparse
 from turns import turns
 
+
 class MultiRobotPathPlanner(DARP):
-    def __init__(self, nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
-                 MaxIter=80000, CCvariation=0.01, randomLevel=0.0001, dcells=2, importance=False):
+    def __init__(self, nx, ny, notEqualPortions, initial_positions, portions,
+                 obs_pos, visualization, MaxIter=80000, CCvariation=0.01,
+                 randomLevel=0.0001, dcells=2, importance=False):
 
         # Initialize DARP
-        self.darp_instance = DARP(nx, ny, notEqualPortions, pos, portions, obs_pos, visualization,
-                      MaxIter=MaxIter, CCvariation=CCvariation, randomLevel=randomLevel, dcells=dcells, importance=importance)
+        self.darp_instance = DARP(nx, ny, notEqualPortions, initial_positions, portions, obs_pos, visualization,
+                                  MaxIter=MaxIter, CCvariation=CCvariation,
+                                  randomLevel=randomLevel, dcells=dcells,
+                                  importance=importance)
 
         # Divide areas based on robots initial positions
         success = self.darp_instance.divideRegions()
@@ -110,16 +114,17 @@ class MultiRobotPathPlanner(DARP):
 
         self.returnPaths = AllRealPaths_dict[min_mode]
 
-        #with open('unitTests/test1_returnPaths.pickle', 'wb') as handle:
-        #    pickle.dump(self.returnPaths, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open('unitTests/test1_returnPaths.pickle', 'wb') as handle:
+            pickle.dump(self.returnPaths, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        with open('unitTests/test1_AssignmentMatrix.pickle', 'wb') as handle:
+            pickle.dump(self.darp_instance.A, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print(f'\nResults:')
         print(f'Number of cells per robot: {num_paths}')
         print(f'Minimum number of cells in robots paths: {min(num_paths)}')
-        print(f'Max number of cells in robots paths: {max(num_paths)}')
+        print(f'Maximum number of cells in robots paths: {max(num_paths)}')
         print(f'Average number of cells in robots paths: {np.mean(np.array(num_paths))}')
         print(f'\nTurns Analysis: {mode_to_drone_turns[min_mode]}')
-
 
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
@@ -145,7 +150,6 @@ class MultiRobotPathPlanner(DARP):
 
 
 if __name__ == '__main__':
-
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
@@ -178,7 +182,7 @@ if __name__ == '__main__':
         help='Portion for each Robot in the Grid (default: (0.2, 0.7, 0.1))')
     argparser.add_argument(
         '-vis',
-        default=True,
+        default=False,
         action='store_true',
         help='Visualize results (default: False)')
     args = argparser.parse_args()

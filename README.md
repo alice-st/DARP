@@ -46,13 +46,13 @@ source DARP/bin/activate
 * To run the application, use:
 
 ```
-python3 darpinPoly.py
+python3 multiRobotPathPlanner.py
 ```
 
 ## Usage
 * To modify the Grid Dimensions, use:
 ```
-python3 darpinPoly.py -grid x y
+python3 multiRobotPathPlanner.py -grid x y
 
 ```
 where x, y are the desired rows and columns of the Grid respectively (default: 10, 10).
@@ -60,7 +60,7 @@ where x, y are the desired rows and columns of the Grid respectively (default: 1
 * To modify the number of Robots and their Initial Positions, use:
 
 ```
-python3 darpinPoly.py -in_pos a b c
+python3 multiRobotPathPlanner.py -in_pos a b c
 
 ```
 where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
@@ -68,7 +68,7 @@ where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,colu
 * To assign different portions to each Robot (not Equal), use:
 
 ```
-python3 darpinPoly.py -nep -portions d e f
+python3 multiRobotPathPlanner.py -nep -portions d e f
 
 ```
 
@@ -77,7 +77,7 @@ where d e f are the portions assigned to Robots a, b and c respectively. Their s
 * To use different positions for the obstacles in the Grid, use:
 
 ```
-python3 darpinPoly.py -obs_pos o1 o2 o3
+python3 multiRobotPathPlanner.py -obs_pos o1 o2 o3
 ```
 
 where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
@@ -85,7 +85,7 @@ where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle posi
 * To visualize the results, use:
 
 ```
-python3 darpinPoly.py -vis
+python3 multiRobotPathPlanner.py -vis
 ```
 
 # Results
