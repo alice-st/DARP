@@ -126,7 +126,7 @@ class DARP():
 
         print("\nInitial Conditions Defined:")
         print("Grid Dimensions:", nx, ny)
-        print("Robot Number:", len(initial_positions))
+        print("Number of Robots:", len(initial_positions))
         print("Initial Robots' positions", initial_positions)
         print("Portions for each Robot:", portions, "\n")
 
@@ -155,9 +155,6 @@ class DARP():
                 self.GridEnv[obstacle[0], obstacle[1]] = 1
         for pos in initial_positions:
             self.GridEnv[pos[0], pos[1]] = 2
-
-        print("Given Grid area:")
-        print(self.GridEnv)
 
         self.droneNo = 0
         self.A = np.zeros((self.rows, self.cols))
@@ -255,8 +252,8 @@ class DARP():
                         divFairError[r] = upperThres - plainErrors[r]
 
                 if self.IsThisAGoalState(self.termThr, ConnectedRobotRegions):
-                    print("\nFinal Assignment Matrix:")
-                    print(self.A)
+                    # print("\nFinal Assignment Matrix:")
+                    # print(self.A)
                     break
 
                 TotalNegPerc = 0
@@ -301,7 +298,7 @@ class DARP():
                 self.termThr += 1
 
         self.getBinaryRobotRegions()
-        return success
+        return success, iteration
 
     def getBinaryRobotRegions(self):
         ind = np.where(self.A < self.droneNo)

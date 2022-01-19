@@ -22,10 +22,10 @@ class MultiRobotPathPlanner(DARP):
                                   importance=importance)
 
         # Divide areas based on robots initial positions
-        success = self.darp_instance.divideRegions()
+        self.DARP_success , self.iterations = self.darp_instance.divideRegions()
 
         # Check if solution was found
-        if not success:
+        if not self.DARP_success:
             print("DARP did not manage to find a solution for the given configuration!")
             sys.exit(0)
 
@@ -113,11 +113,6 @@ class MultiRobotPathPlanner(DARP):
         num_paths = [len(x) for x in AllRealPaths_dict[min_mode]]
 
         self.returnPaths = AllRealPaths_dict[min_mode]
-
-        with open('unitTests/test1_returnPaths.pickle', 'wb') as handle:
-            pickle.dump(self.returnPaths, handle, protocol=pickle.HIGHEST_PROTOCOL)
-        with open('unitTests/test1_AssignmentMatrix.pickle', 'wb') as handle:
-            pickle.dump(self.darp_instance.A, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         print(f'\nResults:')
         print(f'Number of cells per robot: {num_paths}')

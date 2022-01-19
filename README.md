@@ -32,6 +32,7 @@ This project was created using:
 * OpenCV version >= 4.5.2.54
 * Pygame version >= 2.0.1
 * Scipy version >= 1.7.1
+* nose == 1.3.7 
 
 ## Installation and Running
 
@@ -86,6 +87,12 @@ where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle posi
 
 ```
 python3 multiRobotPathPlanner.py -vis
+```
+
+* To run the Unittests use:
+
+```
+nosetests --nocapture mainUnitTest.py
 ```
 
 # Results
