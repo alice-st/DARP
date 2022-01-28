@@ -8,7 +8,50 @@ from Visualization import visualize_paths
 import sys
 import argparse
 from turns import turns
+from PIL import Image
 
+
+def get_area_map(path, area=0, obs=-1):
+    """
+    Creates an array from a given png-image(path).
+    :param path: path to the png-image
+    :param area: non-obstacles tiles value; standard is 0
+    :param obs: obstacle tiles value; standard is -1
+    :return: an array of area(0) and obstacle(-1) tiles
+    """
+    le_map = np.array(Image.open(path))
+    ma = np.array(le_map).mean(axis=2) != 0
+    le_map = np.int8(np.zeros(ma.shape))
+    le_map[ma] = area
+    le_map[~ma] = obs
+    return le_map
+
+def get_area_indices(area, value, inv=False, obstacle=-1):
+    """
+    Returns area tiles indices that have value
+    If inv(erted), returns indices that don't have value
+    :param area: array with value and obstacle tiles
+    :param value: searched tiles with value
+    :param inv: if True: search will be inverted and index of non-value tiles will get returned
+    :param obstacle: defines obstacle tiles
+    :return:
+    """
+    try:
+        value = int(value)
+        if inv:
+            return np.concatenate([np.where((area != value))]).T
+        return np.concatenate([np.where((area == value))]).T
+    except:
+        mask = area == value[0]
+        if inv:
+            mask = area != value[0]
+        for v in value[1:]:
+            if inv:
+                mask &= area != v
+            else:
+                mask |= area == v
+        mask &= area != obstacle
+        return np.concatenate([np.where(mask)]).T
 
 class MultiRobotPathPlanner(DARP):
     def __init__(self, nx, ny, notEqualPortions, initial_positions, portions,
@@ -40,7 +83,7 @@ class MultiRobotPathPlanner(DARP):
                 ct = CalculateTrajectories(self.darp_instance.rows, self.darp_instance.cols, MSTs[r])
                 ct.initializeGraph(self.CalcRealBinaryReg(self.darp_instance.BinaryRobotRegions[r], self.darp_instance.rows, self.darp_instance.cols), True)
                 ct.RemoveTheAppropriateEdges()
-                ct.CalculatePathsSequence(4 * self.darp_instance.init_robot_pos[r][0] * self.darp_instance.cols + 2 * self.darp_instance.init_robot_pos[r][1])
+                ct.CalculatePathsSequence(4 * self.darp_instance.initial_positions[r][0] * self.darp_instance.cols + 2 * self.darp_instance.initial_positions[r][1])
                 AllRealPaths.append(ct.PathSequence)
 
             TypesOfLines = np.zeros((self.darp_instance.rows*2, self.darp_instance.cols*2, 2))
@@ -182,5 +225,5 @@ if __name__ == '__main__':
         help='Visualize results (default: False)')
     args = argparser.parse_args()
 
-    rows, cols = args.grid
-    MultiRobotPathPlanner(rows, cols, args.nep, args.in_pos, args.portions, args.obs_pos, args.vis)
+
+    MultiRobotPathPlanner(args.grid[0], args.grid[1], args.nep, args.in_pos,  args.portions, args.obs_pos, True)

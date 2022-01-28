@@ -11,16 +11,11 @@ import os
 from numba import njit
 np.set_printoptions(threshold=sys.maxsize)
 
-random.seed(1)
-os.environ['PYTHONHASHSEED'] = str(1)
-np.random.seed(1)
-
-
 @njit
-def assign(droneNo, rows, cols, init_robot_pos, GridEnv, MetricMatrix, A):
+def assign(droneNo, rows, cols, initial_positions, GridEnv, MetricMatrix, A):
     BWlist = np.zeros((droneNo, rows, cols))
     for r in range(droneNo):
-        BWlist[r, init_robot_pos[r][0], init_robot_pos[r][1]] = 1
+        BWlist[r, initial_positions[r][0], initial_positions[r][1]] = 1
 
     ArrayOfElements = np.zeros(droneNo)
     for i in range(rows):
@@ -80,104 +75,50 @@ def CalcConnectedMultiplier(rows, cols, dist1, dist2, CCvariation):
 
 
 class DARP():
-    def __init__(self, nx, ny, notEqualPortions, pos, portions, obs_pos,
+    def __init__(self, nx, ny, notEqualPortions, given_initial_positions, given_portions, obstacles_positions,
                  visualization, MaxIter=80000, CCvariation=0.01,
                  randomLevel=0.0001, dcells=2,
                  importance=False):
 
-        obstacles_positions = []
-        initial_positions = []
-        for position in pos:
-            if position < 0 or position >= nx * ny:
-                print("Initial positions should be inside the Grid.")
-                sys.exit(2)
-            initial_positions.append((position // ny, position % ny))
-
-        for obstacle in obs_pos:
-            if obstacle < 0 or obstacle >= nx * ny:
-                print("Obstacles should be inside the Grid.")
-                sys.exit(3)
-            obstacles_positions.append((obstacle // ny, obstacle % ny))
-
-        portions_new = []
-        if notEqualPortions:
-            for portion in portions:
-                portions_new.append(portion)
-        else:
-            for drone in range(len(initial_positions)):
-                portions_new.append(1 / len(initial_positions))
-
-        portions = portions_new
-
-        if len(initial_positions) != len(portions):
-            print("Portions should be defined for each drone")
-            sys.exit(4)
-
-        s = sum(portions)
-        if abs(s - 1) >= 0.0001:
-            print("Sum of portions should be equal to 1.")
-            sys.exit(1)
-
-        for position in initial_positions:
-            for obstacle in obstacles_positions:
-                if position[0] == obstacle[0] and position[1] == obstacle[1]:
-                    print("Initial positions should not be on obstacles")
-                    sys.exit(3)
-
-        print("\nInitial Conditions Defined:")
-        print("Grid Dimensions:", nx, ny)
-        print("Number of Robots:", len(initial_positions))
-        print("Initial Robots' positions", initial_positions)
-        print("Portions for each Robot:", portions, "\n")
-
         self.rows = nx
         self.cols = ny
+        self.initial_positions, self.obstacles_positions, self.portions = self.sanity_check(given_initial_positions, given_portions, obstacles_positions, notEqualPortions)
+
         self.visualization = visualization
-        empty_space = []
-        if nx > ny:
-            for j in range(ny, nx):
-                for i in range(nx):
-                    empty_space.append((i, j))
-            self.cols = self.rows
-        elif ny > nx:
-            for j in range(nx, ny):
-                for i in range(ny):
-                    empty_space.append((j, i))
-            self.rows = self.cols
-
-        self.GridEnv = np.full(shape=(self.rows, self.cols), fill_value=0)
-
-        for cell in empty_space:
-            self.GridEnv[cell[0], cell[1]] = 1
-
-        if obstacles_positions != []:
-            for obstacle in obstacles_positions:
-                self.GridEnv[obstacle[0], obstacle[1]] = 1
-        for pos in initial_positions:
-            self.GridEnv[pos[0], pos[1]] = 2
-
-        self.droneNo = 0
-        self.A = np.zeros((self.rows, self.cols))
-        self.init_robot_pos = []
-        self.ob = 0
-        self.defineRobotsObstacles()
         self.MaxIter = MaxIter
         self.CCvariation = CCvariation
         self.randomLevel = randomLevel
         self.dcells = dcells
         self.importance = importance
         self.notEqualPortions = notEqualPortions
+    
+
+        print("\nInitial Conditions Defined:")
+        print("Grid Dimensions:", nx, ny)
+        print("Number of Robots:", len(self.initial_positions))
+        print("Initial Robots' positions", self.initial_positions)
+        print("Portions for each Robot:", self.portions, "\n")
+
+       
+        self.empty_space = []
+        if self.rows > self.cols:
+            for j in range(self.cols, self.rows):
+                for i in range(self.rows):
+                    self.empty_space.append((i, j))
+            self.cols = self.rows
+        elif self.cols > self.rows:
+            for j in range(self.rows, self.cols):
+                for i in range(self.cols):
+                    self.empty_space.append((j, i))
+            self.rows = self.cols
+
+
+        self.droneNo = len(self.initial_positions)
+        self.A = np.zeros((self.rows, self.cols))
+        self.defineGridEnv()
+   
         self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
         self.BinaryRobotRegions = np.zeros((self.droneNo, self.rows, self.cols), dtype=bool)
-
-        # If user has not defined custom portions divide area equally for all drones
-        self.Rportions = np.zeros((self.droneNo))
-        if (not notEqualPortions):
-            for i in range(self.droneNo):
-                self.Rportions[i] = 1.0/self.droneNo
-        else:
-            for i in range(self.droneNo):
-                self.Rportions[i] = portions[i]
 
         self.AllDistances, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance= self.construct_Assignment_Matrix()
         self.MetricMatrix = copy.deepcopy(self.AllDistances)
@@ -191,19 +132,59 @@ class DARP():
         if self.visualization:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
 
-    def defineRobotsObstacles(self):
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if self.GridEnv[i, j] == 2:
-                    self.GridEnv[i, j] = self.droneNo
-                    self.A[i, j] = self.droneNo
-                    self.droneNo += 1
-                    self.init_robot_pos.append((i, j))
-                elif(self.GridEnv[i, j] == 1):
-                    self.ob += 1
-                    self.GridEnv[i, j] = -2
-                else:
-                    self.GridEnv[i, j] = -1
+    def sanity_check(self, given_initial_positions, given_portions, obstacles_positions, notEqualPortions):
+        
+        initial_positions = []
+        for position in given_initial_positions:
+            if position < 0 or position >= self.rows * self.cols:
+                print("Initial positions should be inside the Grid.")
+                sys.exit(1)
+            initial_positions.append((position // self.cols, position % self.cols))
+
+        obstacles_positions = []
+        for obstacle in obstacles_positions:
+            if obstacle < 0 or obstacle >= self.rows * self.cols:
+                print("Obstacles should be inside the Grid.")
+                sys.exit(2)
+            obstacles_positions.append((obstacle // self.cols, obstacle % self.cols))
+
+        portions = []
+        if notEqualPortions:
+            portions = given_portions
+        else:
+            for drone in range(len(initial_positions)):
+                portions.append(1 / len(initial_positions))
+
+        if len(initial_positions) != len(portions):
+            print("Portions should be defined for each drone")
+            sys.exit(3)
+
+        s = sum(portions)
+        if abs(s - 1) >= 0.0001:
+            print("Sum of portions should be equal to 1.")
+            sys.exit(4)
+
+        for position in initial_positions:
+            for obstacle in obstacles_positions:
+                if position[0] == obstacle[0] and position[1] == obstacle[1]:
+                    print("Initial positions should not be on obstacles")
+                    sys.exit(5)
+
+        return initial_positions, obstacles_positions, portions
+          
+    def defineGridEnv(self):
+        self.GridEnv = np.full(shape=(self.rows, self.cols), fill_value=-1)  # create non obstacle map with value -1
+        # initial robot tiles will have their array.index as value
+        for idx, robot in enumerate(self.initial_positions):
+            self.GridEnv[robot] = idx
+            self.A[robot] = idx
+
+        # obstacle tiles value is -2
+        for idx, obstacle_pos in enumerate(self.obstacles_positions):
+            self.GridEnv[obstacle_pos[0], obstacle_pos[1]] = -2
+        for idx, es_pos in enumerate(self.empty_space):
+            self.GridEnv[es_pos] = -2
+        return
 
     def divideRegions(self):
         success = False
@@ -223,7 +204,7 @@ class DARP():
                 self.BWlist, self.A, self.ArrayOfElements = assign(self.droneNo,
                                                                    self.rows,
                                                                    self.cols,
-                                                                   self.init_robot_pos,
+                                                                   self.initial_positions,
                                                                    self.GridEnv,
                                                                    self.MetricMatrix,
                                                                    self.A)
@@ -240,7 +221,7 @@ class DARP():
                     num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
                     if num_labels > 2:
                         ConnectedRobotRegions[r] = False
-                        BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, r,self.rows,self.cols)
+                        BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, r, self.rows, self.cols)
                         ConnectedMultiplier = CalcConnectedMultiplier(self.rows, self.cols,
                                                                       self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
                                                                       self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot),self.CCvariation)
@@ -252,8 +233,6 @@ class DARP():
                         divFairError[r] = upperThres - plainErrors[r]
 
                 if self.IsThisAGoalState(self.termThr, ConnectedRobotRegions):
-                    # print("\nFinal Assignment Matrix:")
-                    # print(self.A)
                     break
 
                 TotalNegPerc = 0
@@ -306,11 +285,9 @@ class DARP():
         self.BinaryRobotRegions[temp] = True
 
     def generateRandomMatrix(self):
-        RandomMa = np.zeros((self.rows, self.cols))
-        randomlevel = 0.0001
-        RandomMa = 2*randomlevel*np.random.uniform(0, 1,size=RandomMa.shape) + (1 - randomlevel)
-
-        return RandomMa
+        RandomMatrix = np.zeros((self.rows, self.cols))
+        RandomMatrix = 2*self.randomLevel*np.random.uniform(0, 1,size=RandomMatrix.shape) + (1 - self.randomLevel)
+        return RandomMatrix
 
     def FinalUpdateOnMetricMatrix(self, CM, RM, currentOne, CC):
         MMnew = np.zeros((self.rows, self.cols))
@@ -330,40 +307,11 @@ class DARP():
             mask = np.where(self.A == i)
             self.connectivity[i, mask[0], mask[1]] = 255
 
-    def constructBinaryImages(self, A, val):
-        BinaryRobot = np.copy(A)
-        BinaryNonRobot = np.copy(A)
-        for i in range(self.rows):
-            for j in range(self.cols):
-                if A[i, j] == 1:
-                    BinaryRobot[i, j] = 1
-                    BinaryNonRobot[i, j] = 0
-                elif A[i, j] != 0:
-                    BinaryRobot[i, j] = 0
-                    BinaryNonRobot[i, j] = 1
-
-        return BinaryRobot, BinaryNonRobot
-
-    def assign(self):
-        self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
-        for r in range(self.droneNo):
-            self.BWlist[r, self.init_robot_pos[r][0], self.init_robot_pos[r][1]] = 1
-
-        self.ArrayOfElements = np.zeros(self.droneNo)
-        ind = np.where(self.GridEnv == -1)
-        for (i, j) in zip(ind[0], ind[1]):
-            indMin = np.argmin(self.MetricMatrix[:, i, j])
-            self.A[i][j] = indMin
-            self.BWlist[indMin, i, j] = 1
-            self.ArrayOfElements[indMin] += 1
-        ind = np.where(self.GridEnv == -2)
-        self.A[ind] = self.droneNo
-
     # Construct Assignment Matrix
     def construct_Assignment_Matrix(self):
         Notiles = self.rows*self.cols
         fair_division = 1/self.droneNo
-        effectiveSize = Notiles - self.droneNo - self.ob
+        effectiveSize = Notiles - self.droneNo - len(self.obstacles_positions) - len(self.empty_space)
         termThr = 0
 
         if effectiveSize % self.droneNo != 0:
@@ -375,7 +323,7 @@ class DARP():
         MinimumImportance = np.zeros(self.droneNo)
 
         for i in range(self.droneNo):
-            DesireableAssign[i] = effectiveSize * self.Rportions[i]
+            DesireableAssign[i] = effectiveSize * self.portions[i]
             MinimumImportance[i] = sys.float_info.max
             if (DesireableAssign[i] != int(DesireableAssign[i]) and termThr != 1):
                 termThr = 1
@@ -387,7 +335,7 @@ class DARP():
             for y in range(self.cols):
                 tempSum = 0
                 for r in range(self.droneNo):
-                    AllDistances[r, x, y] = np.linalg.norm(np.array(self.init_robot_pos[r]) - np.array((x, y)))  # E!
+                    AllDistances[r, x, y] = np.linalg.norm(np.array(self.initial_positions[r]) - np.array((x, y)))  # E!
                     if AllDistances[r, x, y] > MaximunDist[r]:
                         MaximunDist[r] = AllDistances[r, x, y]
                     tempSum += AllDistances[r, x, y]
@@ -406,10 +354,10 @@ class DARP():
 
         return AllDistances, termThr, Notiles, DesireableAssign, TilesImportance, MinimumImportance, MaximumImportance
 
-    def calculateCriterionMatrix(self, TilesImportance, MinimumImportance, MaximumImportance, correctionMult, smallerthan0,):
+    def calculateCriterionMatrix(self, TilesImportance, MinimumImportance, MaximumImportance, correctionMult, smallerthan_zero,):
         returnCrit = np.zeros((self.rows, self.cols))
         if self.importance:
-            if smallerthan0:
+            if smallerthan_zero:
                 returnCrit = (TilesImportance- MinimumImportance)*((correctionMult-1)/(MaximumImportance-MinimumImportance)) + 1
             else:
                 returnCrit = (TilesImportance- MinimumImportance)*((1-correctionMult)/(MaximumImportance-MinimumImportance)) + correctionMult
