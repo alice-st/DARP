@@ -132,7 +132,7 @@ class DARP():
         if self.visualization:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
 
-    def sanity_check(self, given_initial_positions, given_portions, obstacles_positions, notEqualPortions):
+    def sanity_check(self, given_initial_positions, given_portions, obs_pos, notEqualPortions):
         
         initial_positions = []
         for position in given_initial_positions:
@@ -142,7 +142,7 @@ class DARP():
             initial_positions.append((position // self.cols, position % self.cols))
 
         obstacles_positions = []
-        for obstacle in obstacles_positions:
+        for obstacle in obs_pos:
             if obstacle < 0 or obstacle >= self.rows * self.cols:
                 print("Obstacles should be inside the Grid.")
                 sys.exit(2)
