@@ -204,7 +204,7 @@ if __name__ == '__main__':
         help='Obstacles Positions (default: None)')
     argparser.add_argument(
         '-in_pos',
-        default=[1, 3, 9],
+        default=[1, 19, 41],
         nargs='*',
         type=int,
         help='Initial Positions of the robots (default: (1, 3, 9))')
