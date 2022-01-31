@@ -130,7 +130,7 @@ class DARP():
             self.color.append(list(np.random.choice(range(256), size=3)))
 
         if self.visualization:
-            self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
+            self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color, self.initial_positions)
 
     def sanity_check(self, given_initial_positions, given_portions, obs_pos, notEqualPortions):
         
@@ -268,8 +268,8 @@ class DARP():
 
                 iteration += 1
                 if self.visualization:
-                    self.assignment_matrix_visualization.placeCells(self.A)
-                # time.sleep(0.5)
+                    self.assignment_matrix_visualization.placeCells(self.A, iteration_number=iteration)
+                    # time.sleep(0.2)
 
             if iteration >= self.MaxIter:
                 self.MaxIter = self.MaxIter/2
