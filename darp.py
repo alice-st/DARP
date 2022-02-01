@@ -38,12 +38,12 @@ def assign(droneNo, rows, cols, initial_positions, GridEnv, MetricMatrix, A):
 
 
 @njit
-def constructBinaryImages(A, val, rows, cols):
+def constructBinaryImages(A, robo_start_point, rows, cols):
     BinaryRobot = np.copy(A)
     BinaryNonRobot = np.copy(A)
     for i in range(rows):
         for j in range(cols):
-            if A[i, j] == 1:
+            if A[i, j] == A[robo_start_point]:
                 BinaryRobot[i, j] = 1
                 BinaryNonRobot[i, j] = 0
             elif A[i, j] != 0:
@@ -132,7 +132,7 @@ class DARP():
         if self.visualization:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color)
 
-    def sanity_check(self, given_initial_positions, given_portions, obstacles_positions, notEqualPortions):
+    def sanity_check(self, given_initial_positions, given_portions, obs_pos, notEqualPortions):
         
         initial_positions = []
         for position in given_initial_positions:
@@ -142,7 +142,7 @@ class DARP():
             initial_positions.append((position // self.cols, position % self.cols))
 
         obstacles_positions = []
-        for obstacle in obstacles_positions:
+        for obstacle in obs_pos:
             if obstacle < 0 or obstacle >= self.rows * self.cols:
                 print("Obstacles should be inside the Grid.")
                 sys.exit(2)
@@ -221,7 +221,7 @@ class DARP():
                     num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
                     if num_labels > 2:
                         ConnectedRobotRegions[r] = False
-                        BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, r, self.rows, self.cols)
+                        BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, self.initial_positions[r], self.rows, self.cols)
                         ConnectedMultiplier = CalcConnectedMultiplier(self.rows, self.cols,
                                                                       self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
                                                                       self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot),self.CCvariation)
