@@ -69,11 +69,11 @@ where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,colu
 * To assign different portions to each Robot (not Equal), use:
 
 ```
-python3 multiRobotPathPlanner.py -nep -portions d e f
+python3 multiRobotPathPlanner.py -nep -portions p_a p_b p_c
 
 ```
 
-where d e f are the portions assigned to Robots a, b and c respectively. Their sum should be equal to 1. (default: 0.2, 0.3, 0.5)
+where p_a p_b p_c are the portions assigned to Robots a, b and c respectively. Their sum should be equal to 1. (default: 0.2, 0.3, 0.5)
 
 * To use different positions for the obstacles in the Grid, use:
 
@@ -87,6 +87,12 @@ where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle posi
 
 ```
 python3 multiRobotPathPlanner.py -vis
+```
+
+* Demo example:
+ 
+ ```
+python3 multiRobotPathPlanner.py -vis -nep -obs_pos 10 11 12 21 22 23 33 34 35 45 46 47 57 -in_pos 0 99 32 -portions 0.7 0.2 0.1
 ```
 
 * To run the Unittests use:

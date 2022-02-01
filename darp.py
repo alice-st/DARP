@@ -11,6 +11,10 @@ import os
 from numba import njit
 np.set_printoptions(threshold=sys.maxsize)
 
+random.seed(1)
+os.environ['PYTHONHASHSEED'] = str(1)
+np.random.seed(1)
+
 @njit
 def assign(droneNo, rows, cols, initial_positions, GridEnv, MetricMatrix, A):
     BWlist = np.zeros((droneNo, rows, cols))
