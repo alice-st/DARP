@@ -178,16 +178,29 @@ class DARP():
           
     def defineGridEnv(self):
         self.GridEnv = np.full(shape=(self.rows, self.cols), fill_value=-1)  # create non obstacle map with value -1
-        # initial robot tiles will have their array.index as value
-        for idx, robot in enumerate(self.initial_positions):
-            self.GridEnv[robot] = idx
-            self.A[robot] = idx
-
+        
         # obstacle tiles value is -2
         for idx, obstacle_pos in enumerate(self.obstacles_positions):
             self.GridEnv[obstacle_pos[0], obstacle_pos[1]] = -2
         for idx, es_pos in enumerate(self.empty_space):
             self.GridEnv[es_pos] = -2
+
+        connectivity = np.zeros((self.rows, self.cols))
+        
+        mask = np.where(self.GridEnv == -1)
+        connectivity[mask[0], mask[1]] = 255
+        image = np.uint8(connectivity)
+        num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
+
+        if num_labels > 2:
+            print("The environment grid MUST not have unreachable and/or closed shape regions")
+            sys.exit(6)
+        
+        # initial robot tiles will have their array.index as value
+        for idx, robot in enumerate(self.initial_positions):
+            self.GridEnv[robot] = idx
+            self.A[robot] = idx
+
         return
 
     def divideRegions(self):
@@ -224,6 +237,8 @@ class DARP():
                     image = np.uint8(self.connectivity[r, :, :])
                     num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
                     if num_labels > 2:
+                        import pdb
+                        pdb.set_trace()
                         ConnectedRobotRegions[r] = False
                         BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, self.initial_positions[r], self.rows, self.cols)
                         ConnectedMultiplier = CalcConnectedMultiplier(self.rows, self.cols,
@@ -273,7 +288,7 @@ class DARP():
                 iteration += 1
                 if self.visualization:
                     self.assignment_matrix_visualization.placeCells(self.A, iteration_number=iteration)
-                    # time.sleep(0.2)
+                    time.sleep(0.2)
 
             if iteration >= self.MaxIter:
                 self.MaxIter = self.MaxIter/2

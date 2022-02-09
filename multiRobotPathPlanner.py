@@ -226,4 +226,4 @@ if __name__ == '__main__':
     args = argparser.parse_args()
 
 
-    MultiRobotPathPlanner(args.grid[0], args.grid[1], args.nep, args.in_pos,  args.portions, args.obs_pos, True)
+    MultiRobotPathPlanner(args.grid[0], args.grid[1], args.nep, args.in_pos,  args.portions, args.obs_pos, args.vis)
