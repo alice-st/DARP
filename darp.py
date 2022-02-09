@@ -40,7 +40,6 @@ def assign(droneNo, rows, cols, initial_positions, GridEnv, MetricMatrix, A):
                 A[i, j] = droneNo
     return BWlist, A, ArrayOfElements
 
-
 @njit
 def constructBinaryImages(A, robo_start_point, rows, cols):
     BinaryRobot = np.copy(A)
@@ -55,7 +54,6 @@ def constructBinaryImages(A, robo_start_point, rows, cols):
                 BinaryNonRobot[i, j] = 1
 
     return BinaryRobot, BinaryNonRobot
-
 
 @njit
 def CalcConnectedMultiplier(rows, cols, dist1, dist2, CCvariation):
@@ -237,8 +235,6 @@ class DARP():
                     image = np.uint8(self.connectivity[r, :, :])
                     num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
                     if num_labels > 2:
-                        import pdb
-                        pdb.set_trace()
                         ConnectedRobotRegions[r] = False
                         BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, self.initial_positions[r], self.rows, self.cols)
                         ConnectedMultiplier = CalcConnectedMultiplier(self.rows, self.cols,

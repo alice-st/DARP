@@ -10,7 +10,6 @@ import argparse
 from turns import turns
 from PIL import Image
 
-
 def get_area_map(path, area=0, obs=-1):
     """
     Creates an array from a given png-image(path).
