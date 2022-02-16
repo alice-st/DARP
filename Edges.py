@@ -29,11 +29,6 @@ class Graph:
             self.parent[node] = self.FindParent(self.parent[node])
         return self.parent[node]
 
-        # Without path compression
-        # if node == self.parent[node] :
-        #    return node
-        # return self.FindParent(self.parent[node])
-
     def KruskalMST(self):
 
         # Sort objects of an Edge class based on attribute (weight)
@@ -61,9 +56,6 @@ class Graph:
                     self.parent[root2] = root1
                     self.rank[root1] += 1
 
-        # print("\nEdges of minimum spanning tree in graph :", end=' ')
         cost = 0
         for edge in self.mst:
-            # print("[" + str(edge.src) + "-" + str(edge.dst) + "](" + str(edge.weight) + ")", end=' ')
             cost += edge.weight
-        # print("\nCost of minimum spanning tree : "+str(cost))
