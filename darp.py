@@ -122,7 +122,7 @@ class DARP():
         self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
         self.BinaryRobotRegions = np.zeros((self.droneNo, self.rows, self.cols), dtype=bool)
 
-        self.AllDistances, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance= self.construct_Assignment_Matrix()
+        self.AllDistances, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance, self.effectiveSize = self.construct_Assignment_Matrix()
         self.MetricMatrix = copy.deepcopy(self.AllDistances)
         self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
         self.ArrayOfElements = np.zeros(self.droneNo)
@@ -241,7 +241,7 @@ class DARP():
                                                                       self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
                                                                       self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot),self.CCvariation)
                     ConnectedMultiplierList[r, :, :] = ConnectedMultiplier
-                    plainErrors[r] = self.ArrayOfElements[r]/(self.DesireableAssign[r]*self.droneNo)
+                    plainErrors[r] = self.ArrayOfElements[r] / self.effectiveSize
                     if plainErrors[r] < downThres:
                         divFairError[r] = downThres - plainErrors[r]
                     elif plainErrors[r] > upperThres:
@@ -367,7 +367,7 @@ class DARP():
                     if TilesImportance[r, x, y] < MinimumImportance[r]:
                         MinimumImportance[r] = TilesImportance[r, x, y]
 
-        return AllDistances, termThr, Notiles, DesireableAssign, TilesImportance, MinimumImportance, MaximumImportance
+        return AllDistances, termThr, Notiles, DesireableAssign, TilesImportance, MinimumImportance, MaximumImportance, effectiveSize
 
     def calculateCriterionMatrix(self, TilesImportance, MinimumImportance, MaximumImportance, correctionMult, smallerthan_zero,):
         returnCrit = np.zeros((self.rows, self.cols))
