@@ -2,13 +2,14 @@ import numpy as np
 import copy
 import sys
 import cv2
-import random
+# import random
 from scipy import ndimage
 from Visualization import darp_area_visualization
 import time
 import random
 import os
 from numba import njit
+
 np.set_printoptions(threshold=sys.maxsize)
 
 random.seed(1)
@@ -16,10 +17,7 @@ os.environ['PYTHONHASHSEED'] = str(1)
 np.random.seed(1)
 
 @njit
-def assign(droneNo, rows, cols, initial_positions, GridEnv, MetricMatrix, A):
-    BWlist = np.zeros((droneNo, rows, cols))
-    for r in range(droneNo):
-        BWlist[r, initial_positions[r][0], initial_positions[r][1]] = 1
+def assign(droneNo, rows, cols, GridEnv, MetricMatrix, A):
 
     ArrayOfElements = np.zeros(droneNo)
     for i in range(rows):
@@ -32,13 +30,12 @@ def assign(droneNo, rows, cols, initial_positions, GridEnv, MetricMatrix, A):
                         minV = MetricMatrix[r, i, j]
                         indMin = r
 
-                A[i][j] = indMin
-                BWlist[indMin, i, j] = 1
+                A[i, j] = indMin
                 ArrayOfElements[indMin] += 1
 
             elif GridEnv[i, j] == -2:
                 A[i, j] = droneNo
-    return BWlist, A, ArrayOfElements
+    return A, ArrayOfElements
 
 @njit
 def constructBinaryImages(A, robo_start_point, rows, cols):
@@ -76,7 +73,7 @@ def CalcConnectedMultiplier(rows, cols, dist1, dist2, CCvariation):
     return returnM
 
 
-class DARP():
+class DARP:
     def __init__(self, nx, ny, notEqualPortions, given_initial_positions, given_portions, obstacles_positions,
                  visualization, MaxIter=80000, CCvariation=0.01,
                  randomLevel=0.0001, dcells=2,
@@ -124,7 +121,6 @@ class DARP():
 
         self.AllDistances, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance= self.construct_Assignment_Matrix()
         self.MetricMatrix = copy.deepcopy(self.AllDistances)
-        self.BWlist = np.zeros((self.droneNo, self.rows, self.cols))
         self.ArrayOfElements = np.zeros(self.droneNo)
         self.color = []
 
@@ -205,6 +201,7 @@ class DARP():
         success = False
         cancelled = False
         criterionMatrix = np.zeros((self.rows, self.cols))
+        iteration = 0
 
         while self.termThr <= self.dcells and not success and not cancelled:
             downThres = (self.Notiles - self.termThr*(self.droneNo-1))/(self.Notiles*self.droneNo)
@@ -213,16 +210,14 @@ class DARP():
             success = True
 
             # Main optimization loop
-            iteration = 0
 
             while iteration <= self.MaxIter and not cancelled:
-                self.BWlist, self.A, self.ArrayOfElements = assign(self.droneNo,
-                                                                   self.rows,
-                                                                   self.cols,
-                                                                   self.initial_positions,
-                                                                   self.GridEnv,
-                                                                   self.MetricMatrix,
-                                                                   self.A)
+                self.A, self.ArrayOfElements = assign(self.droneNo,
+                                                      self.rows,
+                                                      self.cols,
+                                                      self.GridEnv,
+                                                      self.MetricMatrix,
+                                                      self.A)
                 ConnectedMultiplierList = np.ones((self.droneNo, self.rows, self.cols))
                 ConnectedRobotRegions = np.zeros(self.droneNo)
                 plainErrors = np.zeros((self.droneNo))
