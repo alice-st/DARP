@@ -16,7 +16,7 @@ random.seed(1)
 os.environ['PYTHONHASHSEED'] = str(1)
 np.random.seed(1)
 
-@njit
+@njit(fastmath=True)
 def assign(droneNo, rows, cols, GridEnv, MetricMatrix, A):
 
     ArrayOfElements = np.zeros(droneNo)
@@ -37,7 +37,20 @@ def assign(droneNo, rows, cols, GridEnv, MetricMatrix, A):
                 A[i, j] = droneNo
     return A, ArrayOfElements
 
-@njit
+@njit(fastmath=True)
+def inverse_binary_map_as_uint8(BinaryMap):
+    # cv2.distanceTransform needs input of dtype unit8 (8bit)
+    return np.logical_not(BinaryMap).astype(np.uint8)
+
+@njit(fastmath=True)
+def euclidian_distance_points2d(array1: np.array, array2: np.array) -> np.float_:
+    # this runs much faster than the (numba) np.linalg.norm and is totally enough for our purpose
+    return (
+                   ((array1[0] - array2[0]) ** 2) +
+                   ((array1[1] - array2[1]) ** 2)
+           ) ** 0.5
+
+@njit(fastmath=True)
 def constructBinaryImages(A, robo_start_point, rows, cols):
     BinaryRobot = np.copy(A)
     BinaryNonRobot = np.copy(A)
@@ -52,7 +65,7 @@ def constructBinaryImages(A, robo_start_point, rows, cols):
 
     return BinaryRobot, BinaryNonRobot
 
-@njit
+@njit(fastmath=True)
 def CalcConnectedMultiplier(rows, cols, dist1, dist2, CCvariation):
     returnM = np.zeros((rows, cols))
     MaxV = 0
@@ -345,7 +358,7 @@ class DARP:
             for y in range(self.cols):
                 tempSum = 0
                 for r in range(self.droneNo):
-                    AllDistances[r, x, y] = np.linalg.norm(np.array(self.initial_positions[r]) - np.array((x, y)))  # E!
+                    AllDistances[r, x, y] = euclidian_distance_points2d(np.array(self.initial_positions[r]), np.array((x, y))) # E!
                     if AllDistances[r, x, y] > MaximunDist[r]:
                         MaximunDist[r] = AllDistances[r, x, y]
                     tempSum += AllDistances[r, x, y]
@@ -378,9 +391,9 @@ class DARP:
 
     def NormalizedEuclideanDistanceBinary(self, RobotR, BinaryRobot, BinaryNonRobot):
         if RobotR:
-            distRobot = ndimage.morphology.distance_transform_edt(np.logical_not(BinaryRobot))
+            distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryRobot), distanceType=2, maskSize=0, dstType=5)
         else:
-            distRobot = ndimage.morphology.distance_transform_edt(np.logical_not(BinaryNonRobot))
+            distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryRobot), distanceType=2, maskSize=0, dstType=5)
 
         MaxV = np.max(distRobot)
         MinV = np.min(distRobot)
