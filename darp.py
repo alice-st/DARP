@@ -3,7 +3,7 @@ import copy
 import sys
 import cv2
 # import random
-from scipy import ndimage
+# from scipy import ndimage
 from Visualization import darp_area_visualization
 import time
 import random
