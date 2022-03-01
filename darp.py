@@ -2,7 +2,6 @@ import numpy as np
 import copy
 import sys
 import cv2
-# import random
 from scipy import ndimage
 from Visualization import darp_area_visualization
 import time
@@ -125,8 +124,10 @@ class DARP:
         self.color = []
 
         for r in range(self.droneNo):
+            np.random.seed(r)
             self.color.append(list(np.random.choice(range(256), size=3)))
-
+        
+        np.random.seed(1)
         if self.visualization:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color, self.initial_positions)
 
