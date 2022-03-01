@@ -143,24 +143,24 @@ class MultiRobotPathPlanner(DARP):
 
             # Find mode with the smaller number of turns
             averge_turns = [x.avg for x in mode_to_drone_turns]
-            self.min_mode = averge_turns.index(min(averge_turns))
+            min_mode = averge_turns.index(min(averge_turns))
 
-            if self.darp_instance.visualization:
-                image = visualize_paths(AllRealPaths_dict[self.min_mode], subCellsAssignment_dict[self.min_mode],
-                                        self.darp_instance.droneNo, self.darp_instance.color)
-                image.visualize_paths(self.min_mode)
+            if darp_instance.visualization:
+                image = visualize_paths(AllRealPaths_dict[min_mode], subCellsAssignment_dict[min_mode],
+                                        darp_instance.droneNo, darp_instance.color)
+                image.visualize_paths(min_mode)
 
             # Retrieve number of cells per robot for the configuration with the smaller number of turns
-            num_paths = [len(x) for x in AllRealPaths_dict[self.min_mode]]
+            num_paths = [len(x) for x in AllRealPaths_dict[min_mode]]
 
-            self.returnPaths = AllRealPaths_dict[self.min_mode]
+            returnPaths = AllRealPaths_dict[min_mode]
 
             print(f'\nResults:')
             print(f'Number of cells per robot: {num_paths}')
             print(f'Minimum number of cells in robots paths: {min(num_paths)}')
             print(f'Maximum number of cells in robots paths: {max(num_paths)}')
             print(f'Average number of cells in robots paths: {np.mean(np.array(num_paths))}')
-            print(f'\nTurns Analysis: {mode_to_drone_turns[self.min_mode]}')
+            print(f'\nTurns Analysis: {mode_to_drone_turns[min_mode]}')
 
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
