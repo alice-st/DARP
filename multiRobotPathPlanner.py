@@ -135,6 +135,7 @@ class MultiRobotPathPlanner(DARP):
 
                 drone_turns = turns(AllRealPaths)
                 drone_turns.count_turns()
+                drone_turns.find_avg_and_std()
                 self.mode_to_drone_turns.append(drone_turns)
 
                 AllRealPaths_dict[mode] = AllRealPaths
@@ -144,24 +145,55 @@ class MultiRobotPathPlanner(DARP):
             # Find mode with the smaller number of turns
             averge_turns = [x.avg for x in self.mode_to_drone_turns]
             self.min_mode = averge_turns.index(min(averge_turns))
-
-            if self.darp_instance.visualization:
-                image = visualize_paths(AllRealPaths_dict[self.min_mode], subCellsAssignment_dict[self.min_mode],
-                                        self.darp_instance.droneNo, self.darp_instance.color)
-                image.visualize_paths(self.min_mode)
-
+            
             # Retrieve number of cells per robot for the configuration with the smaller number of turns
-            num_paths = [len(x) for x in AllRealPaths_dict[self.min_mode]]
+            min_mode_num_paths = [len(x) for x in AllRealPaths_dict[self.min_mode]]
+            min_mode_returnPaths = AllRealPaths_dict[self.min_mode]
 
-            returnPaths = AllRealPaths_dict[self.min_mode]
+            # Uncomment if you want to visualize all available modes
+            
+            # if self.darp_instance.visualization:
+            #     for mode in range(4):
+            #         image = visualize_paths(AllRealPaths_dict[mode], subCellsAssignment_dict[mode],
+            #                                 self.darp_instance.droneNo, self.darp_instance.color)
+            #         image.visualize_paths(mode)
+            #     print("Best Mode:", self.min_mode)
+
+            #Combine all modes to get one mode with the least available turns for each drone
+            combined_modes_paths = []
+            combined_modes_turns = []
+            
+            for r in range(self.darp_instance.droneNo):
+                min_turns = sys.maxsize
+                temp_path = []
+                for mode in range(4):
+                    if self.mode_to_drone_turns[mode].turns[r] < min_turns:
+                        temp_path = self.mode_to_drone_turns[mode].paths[r]
+                        min_turns = self.mode_to_drone_turns[mode].turns[r]
+                combined_modes_paths.append(temp_path)
+                combined_modes_turns.append(min_turns)
+
+            self.best_case = turns(combined_modes_paths)
+            self.best_case.turns = combined_modes_turns
+            self.best_case.find_avg_and_std()
+            
+            # Retrieve number of cells per robot for the best case configuration
+            best_case_num_paths = [len(x) for x in self.best_case.paths]
+            best_case_returnPaths = self.best_case.paths
+            
+            #visualize best case
+            if self.darp_instance.visualization:
+                image = visualize_paths(self.best_case.paths, subCellsAssignment_dict[self.min_mode],
+                                        self.darp_instance.droneNo, self.darp_instance.color)
+                image.visualize_paths("Combined Modes")
 
             print(f'\nResults:')
-            print(f'Number of cells per robot: {num_paths}')
-            print(f'Minimum number of cells in robots paths: {min(num_paths)}')
-            print(f'Maximum number of cells in robots paths: {max(num_paths)}')
-            print(f'Average number of cells in robots paths: {np.mean(np.array(num_paths))}')
-            print(f'\nTurns Analysis: {self.mode_to_drone_turns[self.min_mode]}')
-
+            print(f'Number of cells per robot: {best_case_num_paths}')
+            print(f'Minimum number of cells in robots paths: {min(best_case_num_paths)}')
+            print(f'Maximum number of cells in robots paths: {max(best_case_num_paths)}')
+            print(f'Average number of cells in robots paths: {np.mean(np.array(best_case_num_paths))}')
+            print(f'\nTurns Analysis: {self.best_case}')
+    
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
         RealBinaryRobotRegion = np.zeros((2 * rows, 2 * cols), dtype=bool)
