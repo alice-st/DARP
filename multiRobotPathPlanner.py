@@ -9,6 +9,7 @@ import sys
 import argparse
 from turns import turns
 from PIL import Image
+import time
 
 def get_area_map(path, area=0, obs=-1):
     """
@@ -57,6 +58,7 @@ class MultiRobotPathPlanner(DARP):
                  obs_pos, visualization, MaxIter=80000, CCvariation=0.01,
                  randomLevel=0.0001, dcells=2, importance=False):
 
+        start_time = time.time()
         # Initialize DARP
         self.darp_instance = DARP(nx, ny, notEqualPortions, initial_positions, portions, obs_pos, visualization,
                                   MaxIter=MaxIter, CCvariation=CCvariation,
@@ -187,13 +189,15 @@ class MultiRobotPathPlanner(DARP):
                                         self.darp_instance.droneNo, self.darp_instance.color)
                 image.visualize_paths("Combined Modes")
 
+            self.execution_time = time.time() - start_time
+            
             print(f'\nResults:')
             print(f'Number of cells per robot: {best_case_num_paths}')
             print(f'Minimum number of cells in robots paths: {min(best_case_num_paths)}')
             print(f'Maximum number of cells in robots paths: {max(best_case_num_paths)}')
             print(f'Average number of cells in robots paths: {np.mean(np.array(best_case_num_paths))}')
             print(f'\nTurns Analysis: {self.best_case}')
-    
+            
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
         RealBinaryRobotRegion = np.zeros((2 * rows, 2 * cols), dtype=bool)
