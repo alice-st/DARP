@@ -71,7 +71,7 @@ class MultiRobotPathPlanner(DARP):
             print("DARP did not manage to find a solution for the given configuration!")
         else:
             # Iterate for 4 different ways to join edges in MST
-            mode_to_drone_turns = []
+            self.mode_to_drone_turns = []
             AllRealPaths_dict = {}
             subCellsAssignment_dict = {}
             for mode in range(4):
@@ -135,14 +135,14 @@ class MultiRobotPathPlanner(DARP):
 
                 drone_turns = turns(AllRealPaths)
                 drone_turns.count_turns()
-                mode_to_drone_turns.append(drone_turns)
+                self.mode_to_drone_turns.append(drone_turns)
 
                 AllRealPaths_dict[mode] = AllRealPaths
                 subCellsAssignment_dict[mode] = subCellsAssignment
 
 
             # Find mode with the smaller number of turns
-            averge_turns = [x.avg for x in mode_to_drone_turns]
+            averge_turns = [x.avg for x in self.mode_to_drone_turns]
             self.min_mode = averge_turns.index(min(averge_turns))
 
             if self.darp_instance.visualization:
@@ -160,7 +160,7 @@ class MultiRobotPathPlanner(DARP):
             print(f'Minimum number of cells in robots paths: {min(num_paths)}')
             print(f'Maximum number of cells in robots paths: {max(num_paths)}')
             print(f'Average number of cells in robots paths: {np.mean(np.array(num_paths))}')
-            print(f'\nTurns Analysis: {mode_to_drone_turns[self.min_mode]}')
+            print(f'\nTurns Analysis: {self.mode_to_drone_turns[self.min_mode]}')
 
     def CalcRealBinaryReg(self, BinaryRobotRegion, rows, cols):
         temp = np.zeros((2*rows, 2*cols))
