@@ -393,7 +393,7 @@ class DARP:
         if RobotR:
             distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryRobot), distanceType=2, maskSize=0, dstType=5)
         else:
-            distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryRobot), distanceType=2, maskSize=0, dstType=5)
+            distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryNonRobot), distanceType=2, maskSize=0, dstType=5)
 
         MaxV = np.max(distRobot)
         MinV = np.min(distRobot)
