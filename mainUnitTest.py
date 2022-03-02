@@ -17,31 +17,19 @@ cases = [
     MultiRobotPathPlanner(10, 10,
                           False, [1, 3, 9],
                           [0.2, 0.3, 0.5], [],
-                          False, 
-                          MaxIter=MaxIter, CCvariation=CCvariation,
-                          randomLevel=randomLevel, dcells=dcells,
-                          importance=importance),
+                          False),
     MultiRobotPathPlanner(20, 20,
                           False, [1, 50, 76, 83],
                           [0.2, 0.3, 0.5], [3, 4, 5, 6, 7, 8, 99, 100, 101, 102],
-                          False,
-                          MaxIter=MaxIter, CCvariation=CCvariation,
-                          randomLevel=randomLevel, dcells=dcells,
-                          importance=importance),
+                          False),
     MultiRobotPathPlanner(50, 50,
                           False, [1, 2, 3, 4],
                           [0.2, 0.3, 0.5], [],
-                          False,
-                          MaxIter=MaxIter, CCvariation=CCvariation,
-                          randomLevel=randomLevel, dcells=dcells,
-                          importance=importance),
+                          False),
     MultiRobotPathPlanner(50, 50,
                           False, [500, 624, 1500, 2159, 2],
                           [0.2, 0.3, 0.5], [2490, 2491, 2492, 2493, 2494, 2495, 2496, 2497, 2498, 2499],
-                          False,
-                          MaxIter=MaxIter, CCvariation=CCvariation,
-                          randomLevel=randomLevel, dcells=dcells,
-                          importance=importance),
+                          False),
 ]
 
 @parameterized_class(('multiRobot', 'case'), [
@@ -52,25 +40,23 @@ cases = [
 
 
 class TestDARP(unittest.TestCase):
-    def test_DARP_success(self):
-        with open(f'unitTests/test{self.case}_success.pickle', 'rb') as handle:
-            groundTruthDARPsuccess = pickle.load(handle)
-        assert_true(groundTruthDARPsuccess == self.multiRobot.DARP_success)  
-    
     def test_DARP_assignment_matrix(self):   
         with open(f'unitTests/test{self.case}_AssignmentMatrix.pickle', 'rb') as handle:
             groundTruthAssignmentMatrix = pickle.load(handle)
-        assert_true(np.allclose(self.multiRobot.darp_instance.A, groundTruthAssignmentMatrix, rtol=1e-02))
+        assert_true(np.allclose(self.multiRobot.darp_instance.A, groundTruthAssignmentMatrix, atol=1))
         
     def test_DARP_return_paths(self):
         with open(f'unitTests/test{self.case}_returnPaths.pickle', 'rb') as handle:
             groundTruthReturnPaths = pickle.load(handle)
-        assert_almost_equal(self.multiRobot.returnPaths, groundTruthReturnPaths)
+        assert_almost_equal(self.multiRobot.best_case.paths, groundTruthReturnPaths)
         
     def test_DARP_iterations(self):
         with open(f'unitTests/test{self.case}_iterations.pickle', 'rb') as handle:
             groundTruthIterations = pickle.load(handle)    
         assert_true(self.multiRobot.iterations <= groundTruthIterations)
 
-
+    def test_DARP_iterations(self):
+        with open(f'unitTests/test{self.case}_execution_time.pickle', 'rb') as handle:
+            groundTruthExecutionTime = pickle.load(handle)    
+        assert_true(self.multiRobot.execution_time <= groundTruthExecutionTime + 1e-01)
 

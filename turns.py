@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class turns:
     def __init__(self, paths):
         """
@@ -32,6 +31,7 @@ class turns:
                 last_move = current_move
             self.turns.append(num_turns)
 
+    def find_avg_and_std(self):
         self.avg = np.average(self.turns)
         self.std = np.std(self.turns)
 
