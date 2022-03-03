@@ -224,6 +224,8 @@ class DARP:
 
             # Main optimization loop
 
+            iteration=0
+
             while iteration <= self.MaxIter and not cancelled:
                 self.A, self.ArrayOfElements = assign(self.droneNo,
                                                       self.rows,
