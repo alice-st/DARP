@@ -1,5 +1,4 @@
 import numpy as np
-import copy
 import sys
 import cv2
 from Visualization import darp_area_visualization
@@ -125,7 +124,7 @@ class DARP:
 
         self.droneNo = len(self.initial_positions)
         self.A = np.zeros((self.rows, self.cols))
-        self.defineGridEnv()
+        self.GridEnv = self.defineGridEnv()
    
         self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
         self.BinaryRobotRegions = np.zeros((self.droneNo, self.rows, self.cols), dtype=bool)
@@ -183,17 +182,17 @@ class DARP:
         return initial_positions, obstacles_positions, portions
           
     def defineGridEnv(self):
-        self.GridEnv = np.full(shape=(self.rows, self.cols), fill_value=-1)  # create non obstacle map with value -1
+        GridEnv = np.full(shape=(self.rows, self.cols), fill_value=-1)  # create non obstacle map with value -1
         
         # obstacle tiles value is -2
         for idx, obstacle_pos in enumerate(self.obstacles_positions):
-            self.GridEnv[obstacle_pos[0], obstacle_pos[1]] = -2
+            GridEnv[obstacle_pos[0], obstacle_pos[1]] = -2
         for idx, es_pos in enumerate(self.empty_space):
-            self.GridEnv[es_pos] = -2
+            GridEnv[es_pos] = -2
 
         connectivity = np.zeros((self.rows, self.cols))
         
-        mask = np.where(self.GridEnv == -1)
+        mask = np.where(GridEnv == -1)
         connectivity[mask[0], mask[1]] = 255
         image = np.uint8(connectivity)
         num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
@@ -204,10 +203,10 @@ class DARP:
         
         # initial robot tiles will have their array.index as value
         for idx, robot in enumerate(self.initial_positions):
-            self.GridEnv[robot] = idx
+            GridEnv[robot] = idx
             self.A[robot] = idx
 
-        return
+        return GridEnv
 
     def divideRegions(self):
         success = False
