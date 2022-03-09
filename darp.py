@@ -126,7 +126,7 @@ class DARP:
         self.A = np.zeros((self.rows, self.cols))
         self.GridEnv = self.defineGridEnv()
    
-        self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
+        self.connectivity = np.zeros((self.droneNo, self.rows, self.cols), dtype=np.uint8)
         self.BinaryRobotRegions = np.zeros((self.droneNo, self.rows, self.cols), dtype=bool)
 
         self.MetricMatrix, self.termThr, self.Notiles, self.DesireableAssign, self.TilesImportance, self.MinimumImportance, self.MaximumImportance= self.construct_Assignment_Matrix()
@@ -239,9 +239,7 @@ class DARP:
                 for r in range(self.droneNo):
                     ConnectedMultiplier = np.ones((self.rows, self.cols))
                     ConnectedRobotRegions[r] = True
-                    self.update_connectivity()
-                    image = np.uint8(self.connectivity[r, :, :])
-                    num_labels, labels_im = cv2.connectedComponents(image, connectivity=4)
+                    num_labels, labels_im = cv2.connectedComponents(self.connectivity[r, :, :], connectivity=4)
                     if num_labels > 2:
                         ConnectedRobotRegions[r] = False
                         BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, self.initial_positions[r], self.rows, self.cols)
@@ -325,7 +323,7 @@ class DARP:
         return True
 
     def update_connectivity(self):
-        self.connectivity = np.zeros((self.droneNo, self.rows, self.cols))
+        self.connectivity = np.zeros((self.droneNo, self.rows, self.cols), dtype=np.uint8)
         for i in range(self.droneNo):
             mask = np.where(self.A == i)
             self.connectivity[i, mask[0], mask[1]] = 255
