@@ -236,6 +236,7 @@ class DARP:
                 plainErrors = np.zeros((self.droneNo))
                 divFairError = np.zeros((self.droneNo))
 
+                self.update_connectivity()
                 for r in range(self.droneNo):
                     ConnectedMultiplier = np.ones((self.rows, self.cols))
                     ConnectedRobotRegions[r] = True
