@@ -245,8 +245,8 @@ class DARP:
                         ConnectedRobotRegions[r] = False
                         BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, self.initial_positions[r], self.rows, self.cols)
                         ConnectedMultiplier = CalcConnectedMultiplier(self.rows, self.cols,
-                                                                      self.NormalizedEuclideanDistanceBinary(True, BinaryRobot, BinaryNonRobot),
-                                                                      self.NormalizedEuclideanDistanceBinary(False, BinaryRobot, BinaryNonRobot),self.CCvariation)
+                                                                      self.NormalizedEuclideanDistanceBinary(True, BinaryRobot),
+                                                                      self.NormalizedEuclideanDistanceBinary(False, BinaryNonRobot),self.CCvariation)
                     ConnectedMultiplierList[r, :, :] = ConnectedMultiplier
                     plainErrors[r] = self.ArrayOfElements[r]/(self.DesireableAssign[r]*self.droneNo)
                     if plainErrors[r] < downThres:
@@ -388,12 +388,8 @@ class DARP:
 
         return returnCrit
 
-    def NormalizedEuclideanDistanceBinary(self, RobotR, BinaryRobot, BinaryNonRobot):
-        if RobotR:
-            distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryRobot), distanceType=2, maskSize=0, dstType=5)
-        else:
-            distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryNonRobot), distanceType=2, maskSize=0, dstType=5)
-
+    def NormalizedEuclideanDistanceBinary(self, RobotR, BinaryMap):
+        distRobot = cv2.distanceTransform(inverse_binary_map_as_uint8(BinaryMap), distanceType=2, maskSize=0, dstType=5)
         MaxV = np.max(distRobot)
         MinV = np.min(distRobot)
 
