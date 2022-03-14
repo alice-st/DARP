@@ -108,20 +108,6 @@ class DARP:
         print("Initial Robots' positions", self.initial_positions)
         print("Portions for each Robot:", self.portions, "\n")
 
-       
-        self.empty_space = []
-        if self.rows > self.cols:
-            for j in range(self.cols, self.rows):
-                for i in range(self.rows):
-                    self.empty_space.append((i, j))
-            self.cols = self.rows
-        elif self.cols > self.rows:
-            for j in range(self.rows, self.cols):
-                for i in range(self.cols):
-                    self.empty_space.append((j, i))
-            self.rows = self.cols
-
-
         self.droneNo = len(self.initial_positions)
         self.A = np.zeros((self.rows, self.cols))
         self.GridEnv = self.defineGridEnv()
@@ -187,8 +173,6 @@ class DARP:
         # obstacle tiles value is -2
         for idx, obstacle_pos in enumerate(self.obstacles_positions):
             GridEnv[obstacle_pos[0], obstacle_pos[1]] = -2
-        for idx, es_pos in enumerate(self.empty_space):
-            GridEnv[es_pos] = -2
 
         connectivity = np.zeros((self.rows, self.cols))
         
@@ -333,7 +317,7 @@ class DARP:
     def construct_Assignment_Matrix(self):
         Notiles = self.rows*self.cols
         fair_division = 1/self.droneNo
-        effectiveSize = Notiles - self.droneNo - len(self.obstacles_positions) - len(self.empty_space)
+        effectiveSize = Notiles - self.droneNo - len(self.obstacles_positions)
         termThr = 0
 
         if effectiveSize % self.droneNo != 0:
