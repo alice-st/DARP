@@ -3,6 +3,7 @@ import pygame
 from pygame.locals import KEYDOWN, K_q
 import numpy as np
 import time
+from sklearn.preprocessing import MinMaxScaler
 
 # CONSTANTS:
 BLACK = (0, 0, 0)
@@ -12,9 +13,12 @@ class visualize_paths():
     def __init__(self, AllRealPaths, subCellsAssignment, DroneNo, color):
         self.AllRealPaths = AllRealPaths
         self.subCellsAssignment = subCellsAssignment
+        min_max_scaler = MinMaxScaler(feature_range=(0, 800))
+        self.dimensions = min_max_scaler.fit_transform(np.array([self.subCellsAssignment.shape[0], self.subCellsAssignment.shape[1], 0]).reshape(-1, 1)).ravel()
+
         self.DroneNo = DroneNo
         self._VARS = {'surf': False,
-                      'gridWH': (self.subCellsAssignment.shape[0]*25, self.subCellsAssignment.shape[1]*25),
+                      'gridWH': (self.dimensions[0], self.dimensions[1]),
                       'gridOrigin': (0, 0),
                       'gridCellsX': self.subCellsAssignment.shape[0],
                       'gridCellsY': self.subCellsAssignment.shape[1],
@@ -23,7 +27,7 @@ class visualize_paths():
 
     def visualize_paths(self, mode):
         pygame.init()
-        self._VARS['surf'] = pygame.display.set_mode((self.subCellsAssignment.shape[1]*25, self.subCellsAssignment.shape[0]*25))
+        self._VARS['surf'] = pygame.display.set_mode((self.dimensions[1], self.dimensions[0]))
         pygame.display.set_caption('Mode: ' + str(mode))
         while True:
             keep_going = self.checkEvents()
@@ -128,9 +132,12 @@ class visualize_paths():
 class darp_area_visualization(object):
     def __init__(self, Assignment_matrix, DroneNo, color, init_robot_pos):
         self.Assignment_matrix = Assignment_matrix
+        min_max_scaler = MinMaxScaler(feature_range=(0, 800))
+        dimensions = min_max_scaler.fit_transform(np.array([self.Assignment_matrix.shape[0], self.Assignment_matrix.shape[1], 0]).reshape(-1, 1)).ravel()
+
         self.DroneNo = DroneNo
         self._VARS = {'surf': False,
-                      'gridWH': (self.Assignment_matrix.shape[0]*50, self.Assignment_matrix.shape[1]*50),
+                      'gridWH': (dimensions[0], dimensions[1]),
                       'gridOrigin': (0, 0),
                       'gridCellsX': self.Assignment_matrix.shape[0],
                       'gridCellsY': self.Assignment_matrix.shape[1],
@@ -139,7 +146,7 @@ class darp_area_visualization(object):
         self.init_robot_pos_colors = [np.clip((r[0] - 20, r[1] + 20, r[2] - 20), 0, 255).tolist() for r in self.color]
         self.init_robot_pos = init_robot_pos
         pygame.init()
-        self._VARS['surf'] = pygame.display.set_mode((self.Assignment_matrix.shape[1]*50, self.Assignment_matrix.shape[0]*50))
+        self._VARS['surf'] = pygame.display.set_mode((dimensions[1], dimensions[0]))
         self.checkEvents()
         self._VARS['surf'].fill(GREY)
         self.drawSquareGrid(self._VARS['gridOrigin'], self._VARS['gridWH'], 
