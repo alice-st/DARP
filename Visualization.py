@@ -27,7 +27,7 @@ class visualize_paths():
 
     def visualize_paths(self, mode):
         pygame.init()
-        self._VARS['surf'] = pygame.display.set_mode((self.dimensions[1], self.dimensions[0]))
+        self._VARS['surf'] = pygame.display.set_mode((self.dimensions[0], self.dimensions[1]))
         pygame.display.set_caption('Mode: ' + str(mode))
         while True:
             keep_going = self.checkEvents()
@@ -56,16 +56,16 @@ class visualize_paths():
                                  (self._VARS['gridOrigin'][0] + (celldimX*point[3]) + celldimX/2,
                                   self._VARS['gridOrigin'][1] + (celldimY*point[2]) + celldimY/2), width=4)
 
-        cellBorder = 1
+        cellBorder = 0
 
         for row in range(self.subCellsAssignment.shape[0]):
             for column in range(self.subCellsAssignment.shape[1]):
                 if (self.subCellsAssignment[row][column] == self.DroneNo):
                     self.drawSquareCell(
-                        self._VARS['gridOrigin'][0] + (celldimY*row)
-                        + 1 + (2*row*1) + self._VARS['lineWidth']/2,
-                        self._VARS['gridOrigin'][1] + (celldimX*column)
-                        + 1 + (2*column*1) + self._VARS['lineWidth']/2,
+                        self._VARS['gridOrigin'][0] + (celldimX*column)
+                        + self._VARS['lineWidth']/2,
+                        self._VARS['gridOrigin'][1] + (celldimY*row)
+                        + self._VARS['lineWidth']/2,
                         celldimX, celldimY, BLACK)
 
     # Draw filled rectangle at coordinates
