@@ -55,8 +55,7 @@ class TestDARP(unittest.TestCase):
             groundTruthIterations = pickle.load(handle)    
         assert_true(self.multiRobot.iterations <= groundTruthIterations)
 
-    def test_DARP_iterations(self):
+    def test_DARP_Execution_time(self):
         with open(f'unitTests/test{self.case}_execution_time.pickle', 'rb') as handle:
             groundTruthExecutionTime = pickle.load(handle)    
         assert_true(self.multiRobot.execution_time <= groundTruthExecutionTime + 1e-01)
-
