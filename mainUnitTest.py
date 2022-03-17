@@ -29,7 +29,7 @@ cases = [
     MultiRobotPathPlanner(50, 50,
                           False, [500, 624, 1500, 2159, 2],
                           [0.2, 0.3, 0.5], [2490, 2491, 2492, 2493, 2494, 2495, 2496, 2497, 2498, 2499],
-                          False),
+                          False)
 ]
 
 @parameterized_class(('multiRobot', 'case'), [

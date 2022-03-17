@@ -48,15 +48,15 @@ def euclidian_distance_points2d(array1: np.array, array2: np.array) -> np.float_
            ) ** 0.5
 
 @njit(fastmath=True)
-def constructBinaryImages(A, robo_start_point, rows, cols):
-    BinaryRobot = np.copy(A)
-    BinaryNonRobot = np.copy(A)
+def constructBinaryImages(labels_im, robo_start_point, rows, cols):
+    BinaryRobot = np.copy(labels_im)
+    BinaryNonRobot = np.copy(labels_im)
     for i in range(rows):
         for j in range(cols):
-            if A[i, j] == A[robo_start_point]:
+            if labels_im[i, j] == labels_im[robo_start_point]:
                 BinaryRobot[i, j] = 1
                 BinaryNonRobot[i, j] = 0
-            elif A[i, j] != 0:
+            elif labels_im[i, j] != 0:
                 BinaryRobot[i, j] = 0
                 BinaryNonRobot[i, j] = 1
 
@@ -128,7 +128,6 @@ class DARP:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.droneNo, self.color, self.initial_positions)
 
     def sanity_check(self, given_initial_positions, given_portions, obs_pos, notEqualPortions):
-        
         initial_positions = []
         for position in given_initial_positions:
             if position < 0 or position >= self.rows * self.cols:
@@ -230,7 +229,7 @@ class DARP:
                         BinaryRobot, BinaryNonRobot = constructBinaryImages(labels_im, self.initial_positions[r], self.rows, self.cols)
                         ConnectedMultiplier = CalcConnectedMultiplier(self.rows, self.cols,
                                                                       self.NormalizedEuclideanDistanceBinary(True, BinaryRobot),
-                                                                      self.NormalizedEuclideanDistanceBinary(False, BinaryNonRobot),self.CCvariation)
+                                                                      self.NormalizedEuclideanDistanceBinary(False, BinaryNonRobot), self.CCvariation)
                     ConnectedMultiplierList[r, :, :] = ConnectedMultiplier
                     plainErrors[r] = self.ArrayOfElements[r]/(self.DesireableAssign[r]*self.droneNo)
                     if plainErrors[r] < downThres:
