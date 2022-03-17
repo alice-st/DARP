@@ -111,30 +111,10 @@ Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and 
   <img width="550" height="550" src="images/DARP.gif">
 </p>
 
-## STC paths for each robot, ensuring complete area coverage
-
-### Mode = 0 (connection on bottom between the side of the branches of the MST)
+## STC paths for each robot, using the mode that provides the shortest path for each robot and ensuring complete area coverage
 
 <p align="center">
-  <img width="550" height="550" src="images/mode0.png">
-</p>
-
-### Mode = 1 (connection on top between the side of the branches of the MST)
-
-<p align="center">
-  <img width="550" height="550" src="images/mode1.png">
-</p>
-
-### Mode = 2 (connection on right between the side of the branches of the MST)
-
-<p align="center">
-  <img width="550" height="550" src="images/mode2.png">
-</p>
-
-### Mode = 3 (connection on left between the side of the branches of the MST)
-
-<p align="center">
-  <img width="550" height="550" src="images/mode3.png">
+  <img width="550" height="550" src="images/all_modes.png">
 </p>
 
 # Extra Material
