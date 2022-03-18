@@ -8,14 +8,14 @@ DARP algorithm divides the terrain into a number of equal areas each correspondi
 
 ### But how does this algorithm work?
 
-In essence, the DARP algorithm follows a cyclic coordinate descent optimization scheme updating each robots’ territory separately but towards achieving the overall mCPP objectives.
+In essence, the DARP algorithm follows a cyclic coordinate descent optimization scheme updating each robots’ territory separately but towards achieving the overall multi-robot Coverage Path Planning (mCPP) objectives.
 
 <p align="center">
   <img width="550" height="300" src="images/DARP.png">
 </p>
 
 
-After the desired area division is achieved, we use Spanning Tree Coverage algorithm to produce the optimal path for each robot, in order to achieve full coverage of the area of interest.
+After the desired area division is achieved, we use [Spanning Tree Coverage (STC) algorithm](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.479.5125&rep=rep1&type=pdf#:~:text=The%20algorithm%2C%20called%20Spanning%20Tree,covering%20every%20point%20precisely%20once.) algorithm to produce the optimal path for each robot, in order to achieve full coverage of the area of interest.
 
 
 
@@ -36,7 +36,7 @@ This project was created using:
 
 ## Installation and Running
 
-* To install the application, use:
+### To install the application, use:
 ```
 git clone https://github.com/alice-st/DARP-Python.git
 cd DARP-Python
@@ -44,21 +44,24 @@ cd DARP-Python
 source DARP/bin/activate
 ```
 
-* To run the application, use:
+### To run the application, use:
 
 ```
 python3 multiRobotPathPlanner.py
 ```
 
 ## Usage
-* To modify the Grid Dimensions, use:
+
+* The default version of the DARP algorithm refers to a 10x10 grid with 3 drones. To modify the default version, use the instructions below.
+
+#### To modify the Grid Dimensions, use:
 ```
 python3 multiRobotPathPlanner.py -grid x y
 
 ```
 where x, y are the desired rows and columns of the Grid respectively (default: 10, 10).
 
-* To modify the number of Robots and their Initial Positions, use:
+#### To modify the number of Robots and their Initial Positions, use:
 
 ```
 python3 multiRobotPathPlanner.py -in_pos a b c
@@ -66,7 +69,7 @@ python3 multiRobotPathPlanner.py -in_pos a b c
 ```
 where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
 
-* To assign different portions to each Robot (not Equal), use:
+#### To assign different portions to each Robot (not Equal), use:
 
 ```
 python3 multiRobotPathPlanner.py -nep -portions p_a p_b p_c
@@ -75,7 +78,7 @@ python3 multiRobotPathPlanner.py -nep -portions p_a p_b p_c
 
 where p_a p_b p_c are the portions assigned to Robots a, b and c respectively. Their sum should be equal to 1. (default: 0.2, 0.3, 0.5)
 
-* To use different positions for the obstacles in the Grid, use:
+#### To use different positions for the obstacles in the Grid, use:
 
 ```
 python3 multiRobotPathPlanner.py -obs_pos o1 o2 o3
@@ -83,19 +86,19 @@ python3 multiRobotPathPlanner.py -obs_pos o1 o2 o3
 
 where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle positions should not overlap with Robots' initial positions. (default: 5, 6, 7) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
 
-* To visualize the results, use:
+#### To visualize the results, use:
 
 ```
 python3 multiRobotPathPlanner.py -vis
 ```
 
-* Demo example:
+#### Demo example:
  
  ```
 python3 multiRobotPathPlanner.py -vis -nep -obs_pos 10 11 12 21 22 23 33 34 35 45 46 47 57 -in_pos 0 99 32 -portions 0.7 0.2 0.1
 ```
 
-* To run the Unittests use:
+#### To run the Unittests use:
 
 ```
 nosetests --nocapture mainUnitTest.py
