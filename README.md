@@ -33,6 +33,7 @@ This project was created using:
 * Pygame version >= 2.0.1
 * Scipy version >= 1.7.1
 * nose == 1.3.7 
+* scikit-learn
 
 ## Installation and Running
 
