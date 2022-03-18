@@ -56,7 +56,7 @@ python3 multiRobotPathPlanner.py
 The default parameters of the DARP algorithm are as follows:
 
 * 10x10 grid
-* 3 drones at position 0, 3 and 9
+* 3 drones at positions 0, 3 and 9
 * 3 obtacles at positions 5, 6 and 7
 * If -nep is activated (set to True), the algorithm runs for not equal territories with 20%, 30% and 50% coverage per robot. Otherwise, the algorithm runs for equal territories with 33,33% coverage per robot
 
