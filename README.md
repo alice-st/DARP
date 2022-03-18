@@ -39,7 +39,7 @@ This project was created using:
 ### To install the application, use:
 ```
 git clone https://github.com/alice-st/DARP-Python.git
-cd DARP-Python
+cd DARP
 ./Dependencies.sh DARP
 source DARP/bin/activate
 ```

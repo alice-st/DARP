@@ -15,4 +15,5 @@ pip install \
 	jupyter==1.0.0 \
   numba==0.54.1\
   nose==1.3.7\
-  parameterized==0.8.1 
+  parameterized==0.8.1\
+  sklearn 
