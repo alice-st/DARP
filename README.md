@@ -52,7 +52,7 @@ python3 multiRobotPathPlanner.py
 
 ## Usage
 
-* The default version of the DARP algorithm refers to a 10x10 grid with 3 drones. To modify the default version, use the instructions below.
+The default version of the DARP algorithm refers to a 10x10 grid with 3 drones. To modify the default version, use the instructions below.
 
 #### To modify the Grid Dimensions, use:
 ```
