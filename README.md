@@ -15,7 +15,7 @@ In essence, the DARP algorithm follows a cyclic coordinate descent optimization 
 </p>
 
 
-After the desired area division is achieved, we use [Spanning Tree Coverage (STC) algorithm](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.479.5125&rep=rep1&type=pdf#:~:text=The%20algorithm%2C%20called%20Spanning%20Tree,covering%20every%20point%20precisely%20once.) algorithm to produce the optimal path for each robot, in order to achieve full coverage of the area of interest.
+After the desired area division is achieved, we use [Spanning Tree Coverage (STC) algorithm](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.479.5125&rep=rep1&type=pdf#:~:text=The%20algorithm%2C%20called%20Spanning%20Tree,covering%20every%20point%20precisely%20once.) to produce the optimal path for each robot, in order to achieve full coverage of the area of interest.
 
 
 
