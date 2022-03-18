@@ -86,26 +86,26 @@ class MultiRobotPathPlanner(DARP):
                     ct.CalculatePathsSequence(4 * self.darp_instance.initial_positions[r][0] * self.darp_instance.cols + 2 * self.darp_instance.initial_positions[r][1])
                     AllRealPaths.append(ct.PathSequence)
 
-                TypesOfLines = np.zeros((self.darp_instance.rows*2, self.darp_instance.cols*2, 2))
+                self.TypesOfLines = np.zeros((self.darp_instance.rows*2, self.darp_instance.cols*2, 2))
                 for r in range(self.darp_instance.droneNo):
                     flag = False
                     for connection in AllRealPaths[r]:
                         if flag:
-                            if TypesOfLines[connection[0]][connection[1]][0] == 0:
+                            if self.TypesOfLines[connection[0]][connection[1]][0] == 0:
                                 indxadd1 = 0
                             else:
                                 indxadd1 = 1
 
-                            if TypesOfLines[connection[2]][connection[3]][0] == 0 and flag:
+                            if self.TypesOfLines[connection[2]][connection[3]][0] == 0 and flag:
                                 indxadd2 = 0
                             else:
                                 indxadd2 = 1
                         else:
-                            if not (TypesOfLines[connection[0]][connection[1]][0] == 0):
+                            if not (self.TypesOfLines[connection[0]][connection[1]][0] == 0):
                                 indxadd1 = 0
                             else:
                                 indxadd1 = 1
-                            if not (TypesOfLines[connection[2]][connection[3]][0] == 0 and flag):
+                            if not (self.TypesOfLines[connection[2]][connection[3]][0] == 0 and flag):
                                 indxadd2 = 0
                             else:
                                 indxadd2 = 1
@@ -113,19 +113,19 @@ class MultiRobotPathPlanner(DARP):
                         flag = True
                         if connection[0] == connection[2]:
                             if connection[1] > connection[3]:
-                                TypesOfLines[connection[0]][connection[1]][indxadd1] = 2
-                                TypesOfLines[connection[2]][connection[3]][indxadd2] = 3
+                                self.TypesOfLines[connection[0]][connection[1]][indxadd1] = 2
+                                self.TypesOfLines[connection[2]][connection[3]][indxadd2] = 3
                             else:
-                                TypesOfLines[connection[0]][connection[1]][indxadd1] = 3
-                                TypesOfLines[connection[2]][connection[3]][indxadd2] = 2
+                                self.TypesOfLines[connection[0]][connection[1]][indxadd1] = 3
+                                self.TypesOfLines[connection[2]][connection[3]][indxadd2] = 2
 
                         else:
                             if (connection[0] > connection[2]):
-                                TypesOfLines[connection[0]][connection[1]][indxadd1] = 1
-                                TypesOfLines[connection[2]][connection[3]][indxadd2] = 4
+                                self.TypesOfLines[connection[0]][connection[1]][indxadd1] = 1
+                                self.TypesOfLines[connection[2]][connection[3]][indxadd2] = 4
                             else:
-                                TypesOfLines[connection[0]][connection[1]][indxadd1] = 4
-                                TypesOfLines[connection[2]][connection[3]][indxadd2] = 1
+                                self.TypesOfLines[connection[0]][connection[1]][indxadd1] = 4
+                                self.TypesOfLines[connection[2]][connection[3]][indxadd2] = 1
 
                 subCellsAssignment = np.zeros((2*self.darp_instance.rows, 2*self.darp_instance.cols))
                 for i in range(self.darp_instance.rows):
