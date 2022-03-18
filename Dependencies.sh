@@ -16,4 +16,5 @@ pip install \
   numba==0.54.1\
   nose==1.3.7\
   parameterized==0.8.1\
-  sklearn 
+  sklearn \
+  Pillow
