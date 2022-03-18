@@ -52,7 +52,13 @@ python3 multiRobotPathPlanner.py
 
 ## Usage
 
-The default version of the DARP algorithm refers to a 10x10 grid with 3 robots. To modify the default version, use the instructions below.
+The default parameters of the DARP algorithm are as follows:
+
+* 10x10 grid
+* 3 drones
+* If -nep is activated (set to True), the algorithm runs for not equal territories with 20%, 30% and 50% coverage per robot. Otherwise, the algorithm runs for equal territories with 33,33% coverage per robot
+
+To modify the default version, use the instructions below.
 
 #### To modify the Grid Dimensions, use:
 ```
@@ -67,7 +73,7 @@ where x, y are the desired rows and columns of the Grid respectively (default: 1
 python3 multiRobotPathPlanner.py -in_pos a b c
 
 ```
-where a, b, c, are the cells' numbers in the Grid (default: 1, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
+where a, b, c, are the cells' numbers in the Grid (default: 0, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
 
 #### To assign different portions to each Robot (not Equal), use:
 
