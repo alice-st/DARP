@@ -112,7 +112,7 @@ nosetests --nocapture mainUnitTest.py
 
 # Results
 
-Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and Equal portions of the Grid shared between the robots, we obtained the following results:
+Using a 20x20 Grid area, four robots with initial positions 10, 32, 99 and 250 and Equal portions of the Grid shared between the robots, we obtained the following results:
 
 ## Assignment Matrix
 
