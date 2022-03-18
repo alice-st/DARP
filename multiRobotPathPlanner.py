@@ -232,13 +232,13 @@ if __name__ == '__main__':
         help='Dimensions of the Grid (default: (10, 10))')
     argparser.add_argument(
         '-obs_pos',
-        default=[],
+        default=[5, 6, 7],
         nargs='*',
         type=int,
         help='Obstacles Positions (default: None)')
     argparser.add_argument(
         '-in_pos',
-        default=[1, 19, 41],
+        default=[0, 3, 9],
         nargs='*',
         type=int,
         help='Initial Positions of the robots (default: (1, 3, 9))')
