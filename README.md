@@ -112,7 +112,8 @@ Using a 20*20 Grid area, three robots with initial positions 10, 55 and 174 and 
 </p>
 
 ## Final coverage paths for all robots
-### For each robot path has been utilized the mode that results in the minimum number of turns to completely cover its respective sub-region.
+
+* For each robot path has been utilized the mode that results in the minimum number of turns to completely cover its respective sub-region.
 
 <p align="center">
   <img width="550" height="550" src="images/all_modes.png">
