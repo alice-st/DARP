@@ -27,7 +27,7 @@ class visualize_paths():
 
     def visualize_paths(self, mode):
         pygame.init()
-        self._VARS['surf'] = pygame.display.set_mode((self.dimensions[0], self.dimensions[1]))
+        self._VARS['surf'] = pygame.display.set_mode((self.dimensions[1], self.dimensions[0]))
         pygame.display.set_caption('Mode: ' + str(mode))
         while True:
             keep_going = self.checkEvents()
