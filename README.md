@@ -104,16 +104,17 @@ where o1 o2 and o3 are the positions of the obstacles in the Grid. Obstacle posi
 python3 multiRobotPathPlanner.py -vis
 ```
 
-#### Demo example:
- 
- ```
-python3 multiRobotPathPlanner.py -vis -nep -obs_pos 10 11 12 21 22 23 33 34 35 45 46 47 57 -in_pos 0 99 32 -portions 0.7 0.2 0.1
-```
 
 #### To run the Unittests use:
 
 ```
 nosetests --nocapture mainUnitTest.py
+```
+
+#### Demo example:
+ 
+ ```
+python3 multiRobotPathPlanner.py -vis -nep -obs_pos 10 11 12 21 22 23 33 34 35 45 46 47 57 -in_pos 0 99 32 -portions 0.7 0.2 0.1
 ```
 
 ##  Example execution
