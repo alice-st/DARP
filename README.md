@@ -53,14 +53,14 @@ python3 multiRobotPathPlanner.py
 
 ## Usage
 
-The default parameters of the DARP algorithm are as follows:
+By default, without defining any parameters, the *multiRobotPathPlanner* is going to run for the following setup:
 
-* 10x10 grid
-* 3 drones at positions 0, 3 and 9
-* 3 obtacles at positions 5, 6 and 7
-* If -nep is activated (set to True), the algorithm runs for not equal territories with 20%, 30% and 50% coverage per robot. Otherwise, the algorithm runs for equal territories with 33,33% coverage per robot
+<p align="center">
+  <img width="550" height="550" src="images/default_setup.png">
+</p>
 
-To modify the default version, use the instructions below.
+
+To define specific parameters please use the instructions below:
 
 #### To modify the Grid Dimensions, use:
 ```
@@ -77,7 +77,7 @@ python3 multiRobotPathPlanner.py -in_pos a b c
 ```
 where a, b, c, are the cells' numbers in the Grid (default: 0, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
 
-#### To assign different portions to each Robot (not Equal), use:
+#### If -nep is activated (set to True), the algorithm runs for not equal territories with 20%, 30% and 50% coverage per robot. Otherwise, the algorithm runs for equal territories with 33,33% coverage per robot. To assign different portions to each Robot (not Equal), use:
 
 ```
 python3 multiRobotPathPlanner.py -nep -portions p_a p_b p_c
@@ -112,17 +112,17 @@ python3 multiRobotPathPlanner.py -vis -nep -obs_pos 10 11 12 21 22 23 33 34 35 4
 nosetests --nocapture mainUnitTest.py
 ```
 
-# Results
+##  Example execution
 
 Using a 20x20 Grid area, four robots with initial positions 10, 32, 99 and 250 and Equal portions of the Grid shared between the robots, we obtained the following results:
 
-## Assignment Matrix
+### Assignment Matrix
 
 <p align="center">
   <img width="550" height="550" src="images/DARP.gif">
 </p>
 
-## Final coverage paths for all robots
+### Final coverage paths for all robots
 
 For each robot path has been utilized the mode that results in the minimum number of turns to completely cover its respective sub-region.
 
@@ -130,7 +130,7 @@ For each robot path has been utilized the mode that results in the minimum numbe
   <img width="550" height="550" src="images/all_modes.png">
 </p>
 
-# Extra Material
+## Extra Material
 
 Paper: [Zenodo](https://zenodo.org/record/2591050#.YTCvBVtRVH6)
 
@@ -143,7 +143,7 @@ GUI demo: [YouTube](https://www.youtube.com/watch?v=LrGfvma41Ak)
 ROS integration: [Wiki](http://wiki.ros.org/area_division)
 
 
-# Cite as
+## Cite as
 
 ```
 @article{kapoutsisdarp,
