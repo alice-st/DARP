@@ -60,7 +60,6 @@ By default, without defining any parameters, the *multiRobotPathPlanner* is goin
 </p>
 where the red, green and purple cells denote the initial positions of the 3 robots respectively and the black cells denote the environments obstacles. 
 
-
 To define specific parameters please use the instructions below:
 
 #### To modify the Grid Dimensions, use:
