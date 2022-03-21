@@ -77,7 +77,8 @@ python3 multiRobotPathPlanner.py -in_pos a b c
 ```
 where a, b, c, are the cells' numbers in the Grid (default: 0, 3, 9) (row=0,column=0 --> cell=0, row=0,column=1 --> cell=1 etc.)
 
-#### If -nep is activated (set to True), the algorithm runs for not equal territories with 20%, 30% and 50% coverage per robot. Otherwise, the algorithm runs for equal territories with 33,33% coverage per robot. To assign different portions to each Robot (not Equal), use:
+#### To assign different portions to each Robot (not Equal), use:
+
 
 ```
 python3 multiRobotPathPlanner.py -nep -portions p_a p_b p_c
@@ -85,6 +86,9 @@ python3 multiRobotPathPlanner.py -nep -portions p_a p_b p_c
 ```
 
 where p_a p_b p_c are the portions assigned to Robots a, b and c respectively. Their sum should be equal to 1. (default: 0.2, 0.3, 0.5)
+
+If -nep is activated (set to True), the algorithm runs for not equal territories with 20%, 30% and 50% coverage per robot. Otherwise, the algorithm runs for equal territories with 33,33% coverage per robot. 
+
 
 #### To use different positions for the obstacles in the Grid, use:
 
