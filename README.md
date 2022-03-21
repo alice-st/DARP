@@ -37,7 +37,7 @@ This project was created using:
 
 ## Installation and Running
 
-### To install the application, use:
+#### To install the application, use:
 ```
 git clone https://github.com/alice-st/DARP-Python.git
 cd DARP
@@ -45,7 +45,7 @@ cd DARP
 source DARP/bin/activate
 ```
 
-### To run the application, use:
+#### To run the application, use:
 
 ```
 python3 multiRobotPathPlanner.py
