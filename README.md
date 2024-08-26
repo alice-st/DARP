@@ -147,6 +147,9 @@ GUI demo: [YouTube](https://www.youtube.com/watch?v=LrGfvma41Ak)
 
 ROS integration: [Wiki](http://wiki.ros.org/area_division)
 
+DARP Optimal Initial Positions: [Python](https://github.com/alice-st/DARP_Optimal_Initial_Positions)
+
+DARP Real World to Airsim: [Python](https://github.com/emmarapt/RealWorld2AirSim-DARP)
 
 ## Cite as
 
